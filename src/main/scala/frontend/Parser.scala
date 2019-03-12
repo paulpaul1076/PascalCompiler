@@ -1,10 +1,11 @@
 package frontend
 
+import intermediate.{ICode, SymTab}
 import message.{Message, MessageHandler, MessageListener, MessageProducer}
 
 abstract class Parser(protected val scanner: Scanner) extends MessageProducer{
   protected var iCode: ICode = _
-  abstract def parse()
+  abstract def parse() : Unit
   abstract def getErrorCount : Int
   def currentToken() : Token = {
     scanner.currentToken()

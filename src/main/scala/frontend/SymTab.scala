@@ -1,5 +1,0 @@
-package frontend
-
-class SymTab {
-
-}

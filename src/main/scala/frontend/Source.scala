@@ -1,32 +1,33 @@
 package frontend
 
+import message.MessageType
 import java.io.{BufferedReader, IOException}
 
 import message.{Message, MessageListener, MessageProducer}
 
 // Open questions
 // 1) When can (currentPos == Source.BEFORE_NEW_LINE) happen in currentChar()?
-// 2) Isn't peekChar exhibiting wrong behavior when we are at EOL?
+// 2) Isn't peekChar exhibiting wrong behavior when we are at EOL? Answer: this is intended
 
 /**
-  * The framework class that represents the source program.
-  *
-  * @param reader reader of the program.
-  */
+ * The framework class that represents the source program.
+ *
+ * @param reader reader of the program.
+ */
 class Source(private val reader: BufferedReader) extends MessageProducer {
   /**
-    * Source line.
-    */
+   * Source line.
+   */
   private var line: String = _
 
   /**
-    * Current source line number.
-    */
+   * Current source line number.
+   */
   private var lineNum: Int = 0
 
   /**
-    * Current source line pos.
-    */
+   * Current source line pos.
+   */
   private var currentPos: Int = Source.FIRST_TIME_READING_FILE
 
   def getLineNum: Int = {
@@ -38,10 +39,10 @@ class Source(private val reader: BufferedReader) extends MessageProducer {
   }
 
   /**
-    * Returns the current char.
-    *
-    * @return current char.
-    */
+   * Returns the current char.
+   *
+   * @return current char.
+   */
   def currentChar(): Char = {
     if (currentPos == Source.FIRST_TIME_READING_FILE) {
       readLine()
@@ -56,11 +57,8 @@ class Source(private val reader: BufferedReader) extends MessageProducer {
   }
 
   /**
-    * Reads the next source line
-    *
-    * @throws java.io.IOException when there's an error while reading from source file
-    */
-  @throws(classOf[IOException])
+   * Reads the next source line
+   */
   private def readLine(): Unit = {
     line = reader.readLine() // null when at the end of the source
     currentPos = Source.BEFORE_NEW_LINE
@@ -69,24 +67,24 @@ class Source(private val reader: BufferedReader) extends MessageProducer {
       lineNum += 1
     }
 
-    sendMessage(new Message(SOURCE_LINE, {lineNum, line})) // TODO: Figure this out
+    sendMessage(new Message(MessageType.SOURCE_LINE, List(lineNum, line)))
   }
 
   /**
-    * Look and consume the next char.
-    *
-    * @return next char.
-    */
+   * Look and consume the next char.
+   *
+   * @return next char.
+   */
   def nextChar(): Char = {
     currentPos += 1
     currentChar()
   }
 
   /**
-    * Look at the next char without consuming it.
-    *
-    * @return next char.
-    */
+   * Look at the next char without consuming it.
+   *
+   * @return next char.
+   */
   def peekChar(): Char = {
     currentChar()
     val nextPos = currentPos + 1
@@ -100,8 +98,8 @@ class Source(private val reader: BufferedReader) extends MessageProducer {
   }
 
   /**
-    * Close this source reader.
-    */
+   * Close this source reader.
+   */
   def close(): Unit = {
     if (reader != null) {
       try {
@@ -117,40 +115,40 @@ class Source(private val reader: BufferedReader) extends MessageProducer {
   // --------------- MessageProducer
 
   /**
-    * Add listener to the listener list.
-    *
-    * @param listener listener to be added.
-    */
+   * Add listener to the listener list.
+   *
+   * @param listener listener to be added.
+   */
   override def addMessageListener(listener: MessageListener): Unit = ???
 
   /**
-    * Remove message listener from the listener list.
-    *
-    * @param listener listener to be removed.
-    */
+   * Remove message listener from the listener list.
+   *
+   * @param listener listener to be removed.
+   */
   override def removeMessageListener(listener: MessageListener): Unit = ???
 
   /**
-    * Nofity listeners after setting the message.
-    *
-    * @param message message the message to set.
-    */
+   * Nofity listeners after setting the message.
+   *
+   * @param message message the message to set.
+   */
   override def sendMessage(message: Message): Unit = ???
 }
 
 /**
-  * Companion object.
-  */
+ * Companion object.
+ */
 object Source {
 
   /**
-    * End of line.
-    */
+   * End of line.
+   */
   val EOL = '\n'
 
   /**
-    * End of file.
-    */
+   * End of file.
+   */
   val EOF: Char = 0
 
   val FIRST_TIME_READING_FILE: Int = -2

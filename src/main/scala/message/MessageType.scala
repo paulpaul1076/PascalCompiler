@@ -1,6 +1,6 @@
 package message
 
-class MessageType extends Enumeration {
+object MessageType extends Enumeration {
   val SOURCE_LINE = Value
   val SYNTAX_ERROR = Value
   val PARSER_SUMMARY = Value

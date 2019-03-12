@@ -1,3 +1,3 @@
 package message
 
-class Message(private val messageType: MessageType, private val body: Any)
+class Message(val messageType: MessageType.Value, val body: Any)

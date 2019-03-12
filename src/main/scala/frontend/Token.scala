@@ -76,4 +76,7 @@ class Token(protected val source: Source) {
   protected def peekChar(): Char = {
     source.peekChar()
   }
+
+  //--------------- from Source
+  def getLineNumber : Int = source.getLineNum
 }
