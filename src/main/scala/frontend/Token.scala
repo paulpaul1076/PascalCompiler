@@ -13,15 +13,33 @@ class Token(protected val source: Source) {
   protected var tokenType: TokenType = _
 
   /**
+   * Getter for the token type.
+   * @return the type of the token.
+   */
+  def getTokenType : TokenType = tokenType
+
+  /**
     * Token text.
     */
   protected var text: String = _
+
+  /**
+   * Text getter.
+   * @return text of this token.
+   */
+  def getText : String = text
 
   /**
     * Token value.
     * Some tokens will have values, for example 3.14159 is the an approximation of pi.
     */
   protected var value: Any = _
+
+  /**
+   * Getter for value.
+   * @return value of this token.
+   */
+  def getValue : Any = value
 
   /**
     * Line number of the token's source line.
@@ -34,6 +52,12 @@ class Token(protected val source: Source) {
     * Like the token "begin" might be in positions 11 through 15 (all inclusive).
     */
   protected var position: Int = source.getPosition
+
+  /**
+   * Position getter.
+   * @return position.
+   */
+  def getPosition : Int = position
 
   // call extract when construction happens.
   //TODO: Check if this actually works

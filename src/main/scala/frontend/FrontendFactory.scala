@@ -3,16 +3,17 @@ package frontend
 import frontend.pascal.{PascalParserTD, PascalScanner}
 
 /**
- * A factory class that creates parsers for specific source languages.
- */
+  * A factory class that creates parsers for specific source languages.
+  */
 object FrontendFactory {
   /**
-   * Create a parser
-   * @param language source language name (e.g. Pascal).
-   * @param parserType the type of the parser (e.g. top-down).
-   * @param source the source object.
-   * @return the parser.
-   */
+    * Create a parser
+    *
+    * @param language   source language name (e.g. Pascal).
+    * @param parserType the type of the parser (e.g. top-down).
+    * @param source     the source object.
+    * @return the parser.
+    */
   def createParser(language: String, parserType: String, source: Source): Parser = {
     if (language.equalsIgnoreCase("Pascal") &&
       parserType.equalsIgnoreCase("top-down")) {

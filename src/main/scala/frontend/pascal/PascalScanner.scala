@@ -11,16 +11,17 @@ class PascalScanner(source: Source) extends Scanner(source) {
   /**
    * Do the actual work of extracting and returning the next token from the source.
    * Implemented by language specific scanner classes.
+    *
+    * Token's constructors increment source's position by 1.
    *
    * @return next token in the input source.
    */
   override protected def extractToken(): Token = {
-    val currentChar = currentChar()
+    val currentC = currentChar()
 
-    currentChar match {
+    currentC match {
       case Source.EOF => new EofToken(source)
       case _          => new Token(source)
     }
-    // TODO: find out how the method moves the current reading position. p. 33
   }
 }

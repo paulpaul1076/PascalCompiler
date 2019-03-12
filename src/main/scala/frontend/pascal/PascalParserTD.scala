@@ -1,5 +1,7 @@
 package frontend.pascal
 
+import java.io.IOException
+
 import frontend.{EofToken, Parser, Scanner, Token}
 import message.{Message, MessageType}
 
@@ -9,20 +11,46 @@ import message.{Message, MessageType}
  * @param scanner lexer for this parser.
  */
 class PascalParserTD(scanner: Scanner) extends Parser(scanner) {
+
+  /**
+   * Fetches the next token by means of scanner.
+   * For each token it sends a token message to every subscribed listener.
+   */
   override def parse(): Unit = {
-    var token: Token = nextToken()
-    val startTime = System.currentTimeMillis()
 
-    while (!token.isInstanceOf[EofToken]) {
-      token = nextToken()
+    try {
+      var token = nextToken()
+      val startTime = System.currentTimeMillis()
+
+      while (!token.isInstanceOf[EofToken]) {
+        val tokenType = token.getTokenType
+        if (tokenType != ERROR) {
+          sendMessage(new Message(
+            MessageType.TOKEN,
+            List(
+              token.getLineNumber,
+              token.getPosition,
+              tokenType,
+              token.getText,
+              token.getValue
+            )
+          ))
+        } else {
+          PascalParserTD.errorHandler.flag(token, token.getValue.asInstanceOf[PascalErrorCode], this)
+        }
+
+        token = nextToken()
+      }
+
+      val elapsedTime = (System.currentTimeMillis() - startTime) / 1000f
+      sendMessage(new Message(MessageType.PARSER_SUMMARY, List[Any](
+        token.getLineNumber,
+        getErrorCount,
+        elapsedTime))
+      )
+    } catch {
+      case ex: IOException => PascalParserTD.errorHandler.abortTranslation(IO_ERROR, this)
     }
-
-    val elapsedTime = (System.currentTimeMillis() - startTime) / 1000f
-    sendMessage(new Message(MessageType.PARSER_SUMMARY, List(
-      token.getLineNumber,
-      getErrorCount,
-      elapsedTime))
-    )
   }
 
   /**
@@ -31,6 +59,10 @@ class PascalParserTD(scanner: Scanner) extends Parser(scanner) {
    * @return error count.
    */
   override def getErrorCount: Int = {
-    0
+    PascalParserTD.errorHandler.getErrorCount
+  }
+
+  protected object PascalParserTD {
+    val errorHandler = new PascalErrorHandler
   }
 }

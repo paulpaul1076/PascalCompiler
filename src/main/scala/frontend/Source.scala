@@ -50,6 +50,7 @@ class Source(private val reader: BufferedReader) extends MessageProducer {
     } else if (line == null) {
       Source.EOF
     } else if ((currentPos == Source.BEFORE_NEW_LINE) || (currentPos == line.length)) {
+      currentPos = Source.FIRST_TIME_READING_FILE // TODO: Remove if doesn't work
       Source.EOL
     } else {
       line.charAt(currentPos)
@@ -119,21 +120,27 @@ class Source(private val reader: BufferedReader) extends MessageProducer {
    *
    * @param listener listener to be added.
    */
-  override def addMessageListener(listener: MessageListener): Unit = ???
+  override def addMessageListener(listener: MessageListener): Unit = {
+
+  }
 
   /**
    * Remove message listener from the listener list.
    *
    * @param listener listener to be removed.
    */
-  override def removeMessageListener(listener: MessageListener): Unit = ???
+  override def removeMessageListener(listener: MessageListener): Unit = {
+
+  }
 
   /**
    * Nofity listeners after setting the message.
    *
    * @param message message the message to set.
    */
-  override def sendMessage(message: Message): Unit = ???
+  override def sendMessage(message: Message): Unit = {
+
+  }
 }
 
 /**
