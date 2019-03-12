@@ -8,6 +8,7 @@ package message
 trait MessageListener {
   /**
     * Called to receive a message sent by a message producer.
+    *
     * @param message message the message that was sent.
     */
   def messageReceived(message: Message)

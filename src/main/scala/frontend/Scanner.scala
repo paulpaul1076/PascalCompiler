@@ -32,7 +32,7 @@ abstract class Scanner(protected val source: Source) {
     * Implemented by language specific scanner classes.
     * @return next token in the input source.
     */
-  protected abstract def extractToken(): Token
+  protected def extractToken(): Token
 
   /**
     * Convenience method, alias for source.currentChar().

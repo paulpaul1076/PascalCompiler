@@ -18,7 +18,7 @@ class PascalParserTD(scanner: Scanner) extends Parser(scanner) {
     }
 
     val elapsedTime = (System.currentTimeMillis() - startTime) / 1000f
-    sendMessage(new Message(MessageType.PARSER_SUMMARY, List(
+    sendMessage(new Message(MessageType.PARSER_SUMMARY, List[Any](
       token.getLineNumber,
       getErrorCount,
       elapsedTime))

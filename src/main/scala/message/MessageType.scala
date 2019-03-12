@@ -1,5 +1,8 @@
 package message
 
+/**
+  * Types of messages in this framework.
+  */
 object MessageType extends Enumeration {
   val SOURCE_LINE = Value
   val SYNTAX_ERROR = Value

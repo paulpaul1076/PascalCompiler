@@ -8,8 +8,8 @@ import frontend.{FrontendFactory, Parser, Source}
 import intermediate.{ICode, SymTab}
 
 /**
- * Compile or interpret a Pascal source program.
- */
+  * Compile or interpret a Pascal source program.
+  */
 class Pascal(operation: String, filePath: String, flags: String) {
 
   private var parser: Parser = _
@@ -19,7 +19,7 @@ class Pascal(operation: String, filePath: String, flags: String) {
   private var backend: Backend = _
 
   try {
-    val intermeduate = flags.indexOf('i') > -1
+    val intermediate = flags.indexOf('i') > -1
     val xref = flags.indexOf('x') > -1
 
     source = new Source(new BufferedReader(new FileReader(filePath)))
@@ -44,26 +44,114 @@ class Pascal(operation: String, filePath: String, flags: String) {
   }
 
   /**
-   * Private companion object.
-   */
-  private object Pascal {
-    val FLAGS = "[-ix]"
-    val USAGE = "Usage: Pascal execute|compile " + FLAGS + " <source file path>"
+    * Listener for source messages.
+    */
+  private class SourceMessageListener extends MessageListener {
+    /**
+      * Called to receive a message sent by a message producer.
+      *
+      * @param message message the message that was sent.
+      */
+    override def messageReceived(message: Message): Unit = {
+      val body = message.body.asInstanceOf[List[Any]]
 
-    val SOURCE_LINE_FORMAT = "%03d %s"
-    val PARSER_SUMMARY_FORMAT = "" +
-      "\n%,20d source lines." +
-      "\n%,20d syntax errors." +
-      "\n%,20.2f seconds total parsing time.\n"
-    val INTERPRETER_SUMMARY_FORMAT =
-      "\n%,20d statements executed." +
-    "\n%,20d runtime errors." +
-    "\n%20.2f seconds total execution time.\n"
-    val COMPILER_SUMMARY_FORMAT =
-      "\n%,20d instruction generated." +
-    "\n%,20.2f seconds total code generation time.\n"
+      message.messageType match {
+        case MessageType.SOURCE_LINE =>
+          val lineNumber = body(0).asInstanceOf[Integer]
+          val lineText = body(1).asInstanceOf[String]
+          println(String.format(Pascal.SOURCE_LINE_FORMAT, lineNumber, lineText))
+
+      }
+    }
   }
 
+  /**
+    * Listener for parser messages.
+    */
+  private class ParserMessageListener extends MessageListener {
+    /**
+      * Called to receive a message sent by a message producer.
+      *
+      * @param message message the message that was sent.
+      */
+    override def messageReceived(message: Message): Unit = {
+      message.messageType match {
+        case MessageType.PARSER_SUMMARY =>
+          val body = message.body.asInstanceOf[List[Any]]
+
+          val statementCount = body(0).asInstanceOf[Int]
+          val syntaxErrors = body(1).asInstanceOf[Int]
+          val elapsedTime = body(2).asInstanceOf[Float]
+
+          //println(String.format(Pascal.PARSER_SUMMARY_FORMAT, statementCount, syntaxErrors, elapsedTime))
+          println(s"\n$statementCount source lines." +
+            s"\n$syntaxErrors syntax errors." +
+            s"\n$elapsedTime seconds total parsing time.\n")
+      }
+    }
+  }
+
+  /**
+    * Listener for backend messages.
+    */
+  private class BackendMessageListener extends MessageListener {
+    /**
+      * Called to receive a message sent by a message producer.
+      *
+      * @param message the message that was sent.
+      */
+    override def messageReceived(message: Message): Unit = {
+      message.messageType match {
+        case MessageType.INTERPRETER_SUMMARY =>
+          val body = message.body.asInstanceOf[List[Any]]
+          val executionCount = body(0).asInstanceOf[Int]
+          val runtimeErrors = body(1).asInstanceOf[Int]
+          val elapsedTime = body(2).asInstanceOf[Float]
+
+          //println(String.format(Pascal.INTERPRETER_SUMMARY_FORMAT, executionCount, runtimeErrors, elapsedTime))
+          println(s"\n$executionCount statements executed." +
+            s"\n$runtimeErrors runtime errors." +
+            s"\n$elapsedTime seconds total execution time.\n")
+
+        case MessageType.COMPILER_SUMMARY =>
+          val body = message.body.asInstanceOf[List[Any]]
+          val instructionCount = body(0).asInstanceOf[Int]
+          val elapsedTime = body(1).asInstanceOf[Float]
+
+          //println(String.format(Pascal.COMPILER_SUMMARY_FORMAT, instructionCount, elapsedTime))
+          println(s"\n$instructionCount instruction generated." +
+            s"\n$elapsedTime seconds total code generation time.\n")
+      }
+    }
+  }
+
+}
+
+/**
+  * Companion object.
+  */
+object Pascal {
+  val FLAGS = "[-ix]"
+  val USAGE = "Usage: Pascal execute|compile " + FLAGS + " <source file path>"
+
+  val SOURCE_LINE_FORMAT = "%03d %s"
+  val PARSER_SUMMARY_FORMAT = "" +
+    "\n%,20d source lines." +
+    "\n%,20d syntax errors." +
+    "\n%,20.2f seconds total parsing time.\n"
+  val INTERPRETER_SUMMARY_FORMAT =
+    "\n%,20d statements executed." +
+      "\n%,20d runtime errors." +
+      "\n%20.2f seconds total execution time.\n"
+  val COMPILER_SUMMARY_FORMAT =
+    "\n%,20d instruction generated." +
+      "\n%,20.2f seconds total code generation time.\n"
+
+  /**
+    * Program's entry point.
+    *
+    * @param args cmd args.
+    */
   def main(args: Array[String]): Unit = {
     try {
       val operation = args(0)
@@ -90,78 +178,4 @@ class Pascal(operation: String, filePath: String, flags: String) {
       case _: Exception => println(Pascal.USAGE)
     }
   }
-
-  /**
-   * Listener for source messages.
-   */
-  private class SourceMessageListener extends MessageListener {
-    /**
-     * Called to receive a message sent by a message producer.
-     *
-     * @param message message the message that was sent.
-     */
-    override def messageReceived(message: Message): Unit = {
-      val body = message.body.asInstanceOf[List]
-
-      message.messageType match {
-        case MessageType.SOURCE_LINE =>
-          val lineNumber = body(0).asInstanceOf[Int]
-          val lineText = body(1).asInstanceOf[String]
-          println(String.format(Pascal.SOURCE_LINE_FORMAT, lineNumber, lineText))
-
-      }
-    }
-  }
-
-  /**
-   * Listener for parser messages.
-   */
-  private class ParserMessageListener extends MessageListener {
-    /**
-     * Called to receive a message sent by a message producer.
-     *
-     * @param message message the message that was sent.
-     */
-    override def messageReceived(message: Message): Unit = {
-      message.messageType match {
-        case MessageType.PARSER_SUMMARY =>
-          val body = message.body.asInstanceOf[List[Number]]
-          val statementCount = body(0).asInstanceOf[Int]
-          val syntaxErrors = body(1).asInstanceOf[Int]
-          val elapsedTime = body(2).asInstanceOf[Float]
-
-          println(String.format(Pascal.PARSER_SUMMARY_FORMAT, statementCount, syntaxErrors, elapsedTime))
-      }
-    }
-  }
-
-  /**
-   * Listener for backend messages.
-   */
-  private class BackendMessageListener extends MessageListener {
-    /**
-     * Called to receive a message sent by a message producer.
-     *
-     * @param message the message that was sent.
-     */
-    override def messageReceived(message: Message): Unit = {
-      message.messageType match {
-        case MessageType.INTERPRETER_SUMMARY =>
-          val body = message.body.asInstanceOf[List[Number]]
-          val executionCount = body(0).asInstanceOf[Int]
-          val runtimeErrors = body(1).asInstanceOf[Int]
-          val elapsedTime = body(2).asInstanceOf[Float]
-
-          println(String.format(Pascal.INTERPRETER_SUMMARY_FORMAT, executionCount, runtimeErrors, elapsedTime))
-        case MessageType.COMPILER_SUMMARY =>
-          val body = message.body.asInstanceOf[List[Number]]
-          val instructionCount = body(0).asInstanceOf[Int]
-          val elapsedTime = body(1).asInstanceOf[Float]
-
-          println(String.format(Pascal.COMPILER_SUMMARY_FORMAT, instructionCount, elapsedTime))
-      }
-    }
-  }
-
 }
-

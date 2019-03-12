@@ -3,21 +3,65 @@ package frontend
 import intermediate.{ICode, SymTab}
 import message.{Message, MessageHandler, MessageListener, MessageProducer}
 
-abstract class Parser(protected val scanner: Scanner) extends MessageProducer{
+/**
+  * Parser skeleton.
+  *
+  * @param scanner scanner.
+  */
+abstract class Parser(protected val scanner: Scanner) extends MessageProducer {
+
+  /**
+    * Intermediate code.
+    */
   protected var iCode: ICode = _
-  abstract def parse() : Unit
-  abstract def getErrorCount : Int
-  def currentToken() : Token = {
+
+  /**
+    * Method to be overridden by a specific parser.
+    */
+  def parse(): Unit
+
+  /**
+    * Get the number of errors encountered during parsing.
+    *
+    * @return number of errors.
+    */
+  def getErrorCount: Int
+
+  /**
+    * Get the current token.
+    *
+    * @return current token.
+    */
+  def currentToken(): Token = {
     scanner.currentToken()
   }
-  def nextToken() : Token = {
+
+  /**
+    * Get the next token.
+    *
+    * @return next token.
+    */
+  def nextToken(): Token = {
     scanner.nextToken()
   }
+
+  /**
+    * Getter for the intermediate code.
+    * @return iCode.
+    */
+  def getICode : ICode = iCode
+
+  /**
+    * Getter for the symbol table.
+    * @return the symbol table.
+    */
+  def getSymTab : SymTab = Parser.symTab
 
   // ---------- Message producing stuff
 
   /**
     * Delegates its work to MessageHandler to add a new listener.
+    *
     * @param listener listener to be added.
     */
   override def addMessageListener(listener: MessageListener): Unit = {
@@ -26,6 +70,7 @@ abstract class Parser(protected val scanner: Scanner) extends MessageProducer{
 
   /**
     * Delegates its work to MessageHandler to add a new listener.
+    *
     * @param listener listener to be removed.
     */
   override def removeMessageListener(listener: MessageListener): Unit = {
@@ -34,6 +79,7 @@ abstract class Parser(protected val scanner: Scanner) extends MessageProducer{
 
   /**
     * Delegates its work to MessageHandler to add a new listener.
+    *
     * @param message message the message to set.
     */
   override def sendMessage(message: Message): Unit = {
@@ -41,7 +87,17 @@ abstract class Parser(protected val scanner: Scanner) extends MessageProducer{
   }
 }
 
+/**
+  * Companion object.
+  */
 object Parser {
+  /**
+    * Symbol table.
+    */
   protected var symTab: SymTab = _
+
+  /**
+    * A delegate instance that handles message sending.
+    */
   protected val messageHandler: MessageHandler = new MessageHandler
 }

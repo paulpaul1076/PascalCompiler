@@ -6,19 +6,19 @@ package message
 trait MessageProducer {
   /**
     * Add listener to the listener list.
-    * @param listener listener to be added.
+    * @param listener to be added.
     */
-  def addMessageListener(listener: MessageListener)
+  def addMessageListener(listener: MessageListener) : Unit
 
   /**
     * Remove message listener from the listener list.
-    * @param listener listener to be removed.
+    * @param listener to be removed.
     */
-  def removeMessageListener(listener: MessageListener)
+  def removeMessageListener(listener: MessageListener) : Unit
 
   /**
-    * Nofity listeners after setting the message.
-    * @param message message the message to set.
+    * Notify listeners after setting the message.
+    * @param message the message to set.
     */
-  def sendMessage(message: Message)
+  def sendMessage(message: Message) : Unit
 }
