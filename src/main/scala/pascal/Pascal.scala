@@ -76,7 +76,7 @@ class Pascal(operation: String, filePath: String, flags: String) {
      */
     override def messageReceived(message: Message): Unit = {
       message.messageType match {
-        case MessageType.TOKEN               =>
+        case MessageType.TOKEN          =>
           val body = message.body.asInstanceOf[List[Any]]
 
           val lineNumber = body(0).asInstanceOf[Int]
@@ -91,7 +91,7 @@ class Pascal(operation: String, filePath: String, flags: String) {
             s"\ntext is $tokenText" +
             s"\nvalue is $tokenValue"
           )
-        case MessageType.SYNTAX_ERROR =>
+        case MessageType.SYNTAX_ERROR   =>
           val body = message.body.asInstanceOf[List[Any]]
 
           val lineNumber = body(0).asInstanceOf[Int]

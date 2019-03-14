@@ -24,7 +24,7 @@ class PascalParserTD(scanner: Scanner) extends Parser(scanner) {
 
       while (!token.isInstanceOf[EofToken]) {
         val tokenType = token.getTokenType
-        if (tokenType != ERROR) {
+        if (tokenType != PascalTokenType.ERROR) {
           sendMessage(new Message(
             MessageType.TOKEN,
             List(
@@ -49,7 +49,7 @@ class PascalParserTD(scanner: Scanner) extends Parser(scanner) {
         elapsedTime))
       )
     } catch {
-      case ex: IOException => PascalParserTD.errorHandler.abortTranslation(IO_ERROR, this)
+      case ex: IOException => PascalParserTD.errorHandler.abortTranslation(PascalErrorCode.IO_ERROR, this)
     }
   }
 

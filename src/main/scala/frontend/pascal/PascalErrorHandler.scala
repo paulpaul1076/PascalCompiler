@@ -27,7 +27,7 @@ class PascalErrorHandler {
     )
     PascalErrorHandler.errorCount += 1
     if (PascalErrorHandler.errorCount > PascalErrorHandler.MAX_ERRORS) {
-      abortTranslation(TOO_MANY_ERRORS, parser)
+      abortTranslation(PascalErrorCode.TOO_MANY_ERRORS, parser)
     }
   }
 
@@ -48,6 +48,8 @@ class PascalErrorHandler {
       ))
     )
   }
+
+  def getErrorCount : Int = PascalErrorHandler.errorCount
 }
 
 private object PascalErrorHandler {
