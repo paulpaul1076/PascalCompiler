@@ -12,6 +12,10 @@ import frontend.Source
 class PascalErrorToken(source: Source, val errorCode: PascalErrorCode, val tokenText: String)
   extends PascalToken(source) {
 
+  text = tokenText
+  tokenType = PascalTokenType.ERROR
+  value = errorCode
+
   /**
    * Do nothing. Do not consume any source characters.
    */

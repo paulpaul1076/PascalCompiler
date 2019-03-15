@@ -15,13 +15,12 @@ class PascalNumberToken(source: Source) extends PascalToken(source) {
     text = textBuffer.toString()
   }
 
-  protected def extractNumber(textBuffer: StringBuilder) : Unit = {
+  protected def extractNumber(textBuffer: StringBuilder): Unit = {
     var wholeDigits: String = null
     var fractionDigits: String = null
     var exponentDigits: String = null
     var exponentSign = '+'
     var sawDotDot = false
-    var currentC: Char = null
 
     tokenType = PascalTokenType.INTEGER // just an assumption
 
@@ -33,7 +32,7 @@ class PascalNumberToken(source: Source) extends PascalToken(source) {
 
     // Is there a .?
     // It could be a decimal point or the start of a .. token.
-    currentC = currentChar()
+    var currentC = currentChar()
     if (currentC == '.') {
       if (peekChar() == '.') {
         sawDotDot = true // it's a ".." token, so don't consume it
@@ -71,7 +70,7 @@ class PascalNumberToken(source: Source) extends PascalToken(source) {
     //Compute the value of an integer number token.
     if (tokenType == PascalTokenType.INTEGER) {
       val integerValue: Int = computeIntegerValue(wholeDigits)
-      if(tokenType != PascalTokenType.ERROR) {
+      if (tokenType != PascalTokenType.ERROR) {
         value = integerValue
       }
     }
@@ -84,7 +83,7 @@ class PascalNumberToken(source: Source) extends PascalToken(source) {
     }
   }
 
-  private def unsignedIntegerDigits(textBuffer: StringBuilder) : String = {
+  private def unsignedIntegerDigits(textBuffer: StringBuilder): String = {
     var currentC = currentChar()
 
     // Must have at least one digit
@@ -106,13 +105,13 @@ class PascalNumberToken(source: Source) extends PascalToken(source) {
   }
 
   /**
-    * Compute and return the integer value of a string of digits.
-    * Check for overflow.
-    *
-    * @param digits the string of digits.
-    * @return the integer value.
-    */
-  private def computeIntegerValue(digits: String) : Int = {
+   * Compute and return the integer value of a string of digits.
+   * Check for overflow.
+   *
+   * @param digits the string of digits.
+   * @return the integer value.
+   */
+  private def computeIntegerValue(digits: String): Int = {
     // Return 0 if no digits
     if (digits == null) {
       return 0
@@ -143,14 +142,15 @@ class PascalNumberToken(source: Source) extends PascalToken(source) {
   }
 
   /**
-    * Compute and return the float value of a real number.
-    * @param wholeDigits the digits before the dot.
-    * @param fractionDigits the digits after the dot.
-    * @param exponentDigits exponent digits.
-    * @param exponentSign the sign of the exponent.
-    * @return the float value of our number.
-    */
-  private def computeFloatValue(wholeDigits: String, fractionDigits: String, exponentDigits: String, exponentSign: Char) : Float = {
+   * Compute and return the float value of a real number.
+   *
+   * @param wholeDigits    the digits before the dot.
+   * @param fractionDigits the digits after the dot.
+   * @param exponentDigits exponent digits.
+   * @param exponentSign   the sign of the exponent.
+   * @return the float value of our number.
+   */
+  private def computeFloatValue(wholeDigits: String, fractionDigits: String, exponentDigits: String, exponentSign: Char): Float = {
     var floatValue = 0.0
     var exponentValue = computeIntegerValue(exponentDigits)
     var digits = wholeDigits
@@ -168,7 +168,7 @@ class PascalNumberToken(source: Source) extends PascalToken(source) {
     }
 
     // Check for a real number out of range error.
-    if (Math.abs(exponentValue + wholeDigits.length) > MAX_EXPONENT) { // TODO: define MAX_EXPONENT, where did it come from?
+    if (Math.abs(exponentValue + wholeDigits.length) > PascalNumberToken.MAX_EXPONENT) {
       tokenType = PascalTokenType.ERROR
       value = PascalErrorCode.RANGE_REAL
       return 0.0f // why the 'f' in there?
@@ -187,4 +187,8 @@ class PascalNumberToken(source: Source) extends PascalToken(source) {
     }
     return floatValue.asInstanceOf[Float]
   }
+}
+
+private object PascalNumberToken {
+  val MAX_EXPONENT = 37
 }

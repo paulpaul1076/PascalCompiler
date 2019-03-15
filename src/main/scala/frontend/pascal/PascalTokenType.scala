@@ -10,11 +10,9 @@ import scala.collection.mutable
  * @param text text.
  */
 class PascalTokenType(private var text: String) extends TokenType {
-  def this() {
-    this(this.toString.toLowerCase)
-  }
-
   def getText: String = text
+
+  override def toString: String = text
 }
 
 /**
@@ -22,41 +20,41 @@ class PascalTokenType(private var text: String) extends TokenType {
  */
 object PascalTokenType {
   // Reserved words.
-  val AND = new PascalTokenType()
-  val ARRAY = new PascalTokenType()
-  val BEGIN = new PascalTokenType()
-  val CASE = new PascalTokenType()
-  val CONST = new PascalTokenType()
-  val DIV = new PascalTokenType()
-  val DO = new PascalTokenType()
-  val DOWNTO = new PascalTokenType()
-  val ELSE = new PascalTokenType()
-  val END = new PascalTokenType()
-  val FILE = new PascalTokenType()
-  val FOR = new PascalTokenType()
-  val FUNCTION = new PascalTokenType()
-  val GOTO = new PascalTokenType()
-  val IF = new PascalTokenType()
-  val IN = new PascalTokenType()
-  val LABEL = new PascalTokenType()
-  val MOD = new PascalTokenType()
-  val NIL = new PascalTokenType()
-  val NOT = new PascalTokenType()
-  val OF = new PascalTokenType()
-  val OR = new PascalTokenType()
-  val PACKED = new PascalTokenType()
-  val PROCEDURE = new PascalTokenType()
-  val PROGRAM = new PascalTokenType()
-  val RECORD = new PascalTokenType()
-  val REPEAT = new PascalTokenType()
-  val SET = new PascalTokenType()
-  val THEN = new PascalTokenType()
-  val TO = new PascalTokenType()
-  val TYPE = new PascalTokenType()
-  val UNTIL = new PascalTokenType()
-  val VAR = new PascalTokenType()
-  val WHILE = new PascalTokenType()
-  val WITH = new PascalTokenType()
+  val AND = new PascalTokenType("AND")
+  val ARRAY = new PascalTokenType("ARRAY")
+  val BEGIN = new PascalTokenType("BEGIN")
+  val CASE = new PascalTokenType("CASE")
+  val CONST = new PascalTokenType("CONST")
+  val DIV = new PascalTokenType("DIV")
+  val DO = new PascalTokenType("DO")
+  val DOWNTO = new PascalTokenType("DOWNTO")
+  val ELSE = new PascalTokenType("ELSE")
+  val END = new PascalTokenType("END")
+  val FILE = new PascalTokenType("FILE")
+  val FOR = new PascalTokenType("FOR")
+  val FUNCTION = new PascalTokenType("FUNCTION")
+  val GOTO = new PascalTokenType("GOTO")
+  val IF = new PascalTokenType("IF")
+  val IN = new PascalTokenType("IN")
+  val LABEL = new PascalTokenType("LABEL")
+  val MOD = new PascalTokenType("MOD")
+  val NIL = new PascalTokenType("NIL")
+  val NOT = new PascalTokenType("NOT")
+  val OF = new PascalTokenType("OF")
+  val OR = new PascalTokenType("OR")
+  val PACKED = new PascalTokenType("PACKED")
+  val PROCEDURE = new PascalTokenType("PROCEDURE")
+  val PROGRAM = new PascalTokenType("PROGRAM")
+  val RECORD = new PascalTokenType("RECORD")
+  val REPEAT = new PascalTokenType("REPEAT")
+  val SET = new PascalTokenType("SET")
+  val THEN = new PascalTokenType("THEN")
+  val TO = new PascalTokenType("TO")
+  val TYPE = new PascalTokenType("TYPE")
+  val UNTIL = new PascalTokenType("UNTIL")
+  val VAR = new PascalTokenType("VAR")
+  val WHILE = new PascalTokenType("WHILE")
+  val WITH = new PascalTokenType("WITH")
 
   // Special symbols.
   val PLUS = new PascalTokenType("+")
@@ -84,12 +82,12 @@ object PascalTokenType {
   val UP_ARROW = new PascalTokenType("^")
   val DOT_DOT = new PascalTokenType("..")
 
-  val IDENTIFIER = new PascalTokenType()
-  val INTEGER = new PascalTokenType()
-  val REAL = new PascalTokenType()
-  val STRING = new PascalTokenType()
-  val ERROR = new PascalTokenType()
-  val END_OF_FILE = new PascalTokenType()
+  val IDENTIFIER = new PascalTokenType("IDENTIFIER")
+  val INTEGER = new PascalTokenType("INTEGER")
+  val REAL = new PascalTokenType("REAL")
+  val STRING = new PascalTokenType("STRING")
+  val ERROR = new PascalTokenType("ERROR")
+  val END_OF_FILE = new PascalTokenType("END_OF_FILE")
 
   //TODO: Make sure the 2 assignments below actually work.
 
@@ -136,29 +134,28 @@ object PascalTokenType {
   // is the key to its Pascal token type.
   val SPECIAL_SYMBOLS = new mutable.HashMap[String, PascalTokenType]() += (
     PLUS.getText -> PLUS,
-      MINUS.getText -> MINUS,
-      STAR.getText -> STAR,
-      SLASH.getText -> SLASH,
-      COLON_EQUALS.getText -> COLON_EQUALS,
-      DOT.getText -> DOT,
-      COMMA.getText -> COMMA,
-      SEMICOLON.getText -> SEMICOLON,
-      COLON.getText -> COLON,
-      QUOTE.getText -> QUOTE,
-      EQUALS.getText -> EQUALS,
-      NOT_EQUALS.getText -> NOT_EQUALS,
-      LESS_THAN.getText -> LESS_THAN,
-      LESS_EQUALS.getText -> LESS_EQUALS,
-      GREATER_EQUALS.getText -> GREATER_EQUALS,
-      GREATER_THAN.getText -> GREATER_THAN,
-      LEFT_PAREN.getText -> LEFT_PAREN,
-      RIGHT_PAREN.getText -> RIGHT_PAREN,
-      LEFT_BRACKET.getText -> LEFT_BRACKET,
-      RIGHT_BRACKET.getText -> RIGHT_BRACKET,
-      LEFT_BRACE.getText -> LEFT_BRACE,
-      RIGHT_BRACE.getText -> RIGHT_BRACE,
-      UP_ARROW.getText -> UP_ARROW,
-      DOT_DOT.getText -> DOT_DOT
+    MINUS.getText -> MINUS,
+    STAR.getText -> STAR,
+    SLASH.getText -> SLASH,
+    COLON_EQUALS.getText -> COLON_EQUALS,
+    DOT.getText -> DOT,
+    COMMA.getText -> COMMA,
+    SEMICOLON.getText -> SEMICOLON,
+    COLON.getText -> COLON,
+    QUOTE.getText -> QUOTE,
+    EQUALS.getText -> EQUALS,
+    NOT_EQUALS.getText -> NOT_EQUALS,
+    LESS_THAN.getText -> LESS_THAN,
+    LESS_EQUALS.getText -> LESS_EQUALS,
+    GREATER_EQUALS.getText -> GREATER_EQUALS,
+    GREATER_THAN.getText -> GREATER_THAN,
+    LEFT_PAREN.getText -> LEFT_PAREN,
+    RIGHT_PAREN.getText -> RIGHT_PAREN,
+    LEFT_BRACKET.getText -> LEFT_BRACKET,
+    RIGHT_BRACKET.getText -> RIGHT_BRACKET,
+    LEFT_BRACE.getText -> LEFT_BRACE,
+    RIGHT_BRACE.getText -> RIGHT_BRACE,
+    UP_ARROW.getText -> UP_ARROW,
+    DOT_DOT.getText -> DOT_DOT
   )
-
 }

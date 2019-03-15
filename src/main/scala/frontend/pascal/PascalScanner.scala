@@ -23,7 +23,7 @@ class PascalScanner(source: Source) extends Scanner(source) {
     val currentC = currentChar()
     var token: Token = null
     if (currentC == Source.EOF) {
-      token = new EofToken(source, PascalTokenType.END_OF_FILE) // TODO: fix this.
+      token = new EofToken(source)
     } else if (Character.isLetter(currentC)) {
       token = new PascalWordToken(source)
     } else if (Character.isDigit(currentC)) {

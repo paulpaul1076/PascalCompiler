@@ -1,9 +1,7 @@
 package frontend
 
-import message.MessageType
+import message._
 import java.io.{BufferedReader, IOException}
-
-import message.{Message, MessageListener, MessageProducer}
 
 // Open questions
 // 1) When can (currentPos == Source.BEFORE_NEW_LINE) happen in currentChar()?
@@ -50,8 +48,11 @@ class Source(private val reader: BufferedReader) extends MessageProducer {
     } else if (line == null) {
       Source.EOF
     } else if ((currentPos == Source.BEFORE_NEW_LINE) || (currentPos == line.length)) {
-      currentPos = Source.FIRST_TIME_READING_FILE // TODO: Remove if doesn't work
       Source.EOL
+    }
+    else if (currentPos > line.length) {
+      readLine()
+      nextChar()
     } else {
       line.charAt(currentPos)
     }
@@ -66,9 +67,8 @@ class Source(private val reader: BufferedReader) extends MessageProducer {
 
     if (line != null) {
       lineNum += 1
+      sendMessage(new Message(MessageType.SOURCE_LINE, List(lineNum, line)))
     }
-
-    sendMessage(new Message(MessageType.SOURCE_LINE, List(lineNum, line)))
   }
 
   /**
@@ -121,7 +121,7 @@ class Source(private val reader: BufferedReader) extends MessageProducer {
    * @param listener listener to be added.
    */
   override def addMessageListener(listener: MessageListener): Unit = {
-
+    Source.messageHandler.addMessageListener(listener)
   }
 
   /**
@@ -130,16 +130,16 @@ class Source(private val reader: BufferedReader) extends MessageProducer {
    * @param listener listener to be removed.
    */
   override def removeMessageListener(listener: MessageListener): Unit = {
-
+    Source.messageHandler.removeMessageListener(listener)
   }
 
   /**
-   * Nofity listeners after setting the message.
+   * Notify listeners after setting the message.
    *
    * @param message message the message to set.
    */
   override def sendMessage(message: Message): Unit = {
-
+    Source.messageHandler.sendMessage(message)
   }
 }
 
@@ -148,6 +148,7 @@ class Source(private val reader: BufferedReader) extends MessageProducer {
  */
 object Source {
 
+  val messageHandler = new MessageHandler
   /**
    * End of line.
    */
@@ -156,7 +157,7 @@ object Source {
   /**
    * End of file.
    */
-  val EOF: Char = 0
+  val EOF: Char = 0 // TODO: Find out why this is 0 and not -1, does it have to do with the text editor that will be used?
 
   val FIRST_TIME_READING_FILE: Int = -2
   val BEFORE_NEW_LINE: Int = -1
