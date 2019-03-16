@@ -1,6 +1,6 @@
 package frontend
 
-import intermediate.{ICode, SymTab}
+import intermediate.{ICode, SymTab, SymTabFactory, SymTabStack}
 import message.{Message, MessageHandler, MessageListener, MessageProducer}
 
 /**
@@ -47,15 +47,17 @@ abstract class Parser(protected val scanner: Scanner) extends MessageProducer {
 
   /**
     * Getter for the intermediate code.
+    *
     * @return iCode.
     */
-  def getICode : ICode = iCode
+  def getICode: ICode = iCode
 
   /**
     * Getter for the symbol table.
+    *
     * @return the symbol table.
     */
-  def getSymTab : SymTab = Parser.symTab
+  def getSymTab: SymTab = Parser.symTab
 
   // ---------- Message producing stuff
 
@@ -95,6 +97,11 @@ object Parser {
     * Symbol table.
     */
   protected var symTab: SymTab = _
+
+  /**
+    * Symbol table stack.
+    */
+  protected var symTabStack: SymTabStack = SymTabFactory.createSymTabStack()
 
   /**
     * A delegate instance that handles message sending.
