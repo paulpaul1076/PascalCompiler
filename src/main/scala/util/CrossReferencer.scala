@@ -2,8 +2,16 @@ package util
 
 import intermediate.{SymTab, SymTabEntry, SymTabStack}
 
+/**
+ * Generate a cross-reference listing.
+ */
 class CrossReferencer {
 
+  /**
+   * Print the table tag.
+   *
+   * @param symTabStack the symol table stack.
+   */
   def print(symTabStack: SymTabStack): Unit = {
     println("\n===== CROSS-REFERENCE TABLE =====")
     printColumnHeadings()
@@ -11,12 +19,20 @@ class CrossReferencer {
     printSymTab(symTabStack.getLocalSymTab)
   }
 
+  /**
+   * Print the headings for the 2 columns, "Identifier" and "Line numbers".
+   */
   private def printColumnHeadings(): Unit = {
     println()
     println(f"${"Identifier"}%-16s" + CrossReferencer.NUMBERS_LABEL)
     println(f"${"----------"}%-16s" + CrossReferencer.NUMBERS_UNDERLINE)
   }
 
+  /**
+   * Print the symbol table.
+   *
+   * @param symTab symbol table.
+   */
   private def printSymTab(symTab: SymTab): Unit = {
     /*for (entry: SymTabEntry <- symTab.sortedEntries)*/ symTab.sortedEntries.forEach(entry => {
       val lineNumbers = entry.getLineNumbers
@@ -31,6 +47,9 @@ class CrossReferencer {
     })
   }
 
+  /**
+   * Some constants used by this class.
+   */
   object CrossReferencer {
     val NAME_WIDTH = 16
     val NUMBERS_LABEL = " Line numbers    "

@@ -41,7 +41,7 @@ class Pascal(operation: String, filePath: String, flags: String) {
     //symTab = parser.getSymTab // TODO: Remove it altogether?
     symTabStack = Parser.symTabStack
 
-    if(xref) {
+    if (xref) {
       val crossReferencer = new CrossReferencer
       crossReferencer.print(symTabStack)
     }
