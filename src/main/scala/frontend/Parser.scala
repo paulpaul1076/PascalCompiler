@@ -96,15 +96,15 @@ object Parser {
   /**
     * Symbol table.
     */
-  protected var symTab: SymTab = _
+  var symTab: SymTab = _ // TODO: should it be global like this?
 
   /**
     * Symbol table stack.
     */
-  protected var symTabStack: SymTabStack = SymTabFactory.createSymTabStack()
+  var symTabStack: SymTabStack = SymTabFactory.createSymTabStack() // TODO: should it be global like this?
 
   /**
     * A delegate instance that handles message sending.
     */
-  protected val messageHandler: MessageHandler = new MessageHandler
+  val messageHandler: MessageHandler = new MessageHandler // TODO: should it be global like this?
 }

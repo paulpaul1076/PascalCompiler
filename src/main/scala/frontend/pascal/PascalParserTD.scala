@@ -24,20 +24,33 @@ class PascalParserTD(scanner: Scanner) extends Parser(scanner) {
 
       while (!token.isInstanceOf[EofToken]) {
         val tokenType = token.getTokenType
-        if (tokenType != PascalTokenType.ERROR) {
-          sendMessage(new Message(
-            MessageType.TOKEN,
-            List(
-              token.getLineNumber,
-              token.getPosition,
-              tokenType,
-              token.getText,
-              token.getValue
-            )
-          ))
-        } else {
+
+        if (tokenType == PascalTokenType.IDENTIFIER) {
+          val name = token.getText.toLowerCase()
+
+          var entry = Parser.symTabStack.lookup(name)
+          if (entry == null) {
+            entry = Parser.symTabStack.enterLocal(name)
+          }
+          entry.appendLineNumber(token.getLineNumber)
+        } else if (tokenType == PascalTokenType.ERROR) {
           PascalParserTD.errorHandler.flag(token, token.getValue.asInstanceOf[PascalErrorCode], this)
         }
+
+//        if (tokenType != PascalTokenType.ERROR) {
+//          sendMessage(new Message(
+//            MessageType.TOKEN,
+//            List(
+//              token.getLineNumber,
+//              token.getPosition,
+//              tokenType,
+//              token.getText,
+//              token.getValue
+//            )
+//          ))
+//        } else {
+//          PascalParserTD.errorHandler.flag(token, token.getValue.asInstanceOf[PascalErrorCode], this)
+//        }
 
         token = nextToken()
       }

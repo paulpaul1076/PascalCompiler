@@ -4,8 +4,9 @@ import java.io.{BufferedReader, FileReader}
 
 import backend.{Backend, BackendFactory}
 import frontend.{FrontendFactory, Parser, Source}
-import intermediate.{ICode, SymTab}
+import intermediate.{ICode, SymTab, SymTabStack}
 import pascal.listeners.{BackendMessageListener, ParserMessageListener, SourceMessageListener}
+import util.CrossReferencer
 
 /**
  * Compile or interpret a Pascal source program.
@@ -15,8 +16,10 @@ class Pascal(operation: String, filePath: String, flags: String) {
   private var parser: Parser = _
   private var source: Source = _
   private var iCode: ICode = _
-  private var symTab: SymTab = _
+  //private var symTab: SymTab = _ // TODO: Remove it altogether?
   private var backend: Backend = _
+
+  private var symTabStack: SymTabStack = _
 
   try {
     val intermediate = flags.indexOf('i') > -1
@@ -35,9 +38,15 @@ class Pascal(operation: String, filePath: String, flags: String) {
     source.close()
 
     iCode = parser.getICode
-    symTab = parser.getSymTab
+    //symTab = parser.getSymTab // TODO: Remove it altogether?
+    symTabStack = Parser.symTabStack
 
-    backend.process(iCode, symTab)
+    if(xref) {
+      val crossReferencer = new CrossReferencer
+      crossReferencer.print(symTabStack)
+    }
+
+    backend.process(iCode, symTabStack)
   } catch {
     case e: Exception => println("*****Internal translator error. *****")
       e.printStackTrace()

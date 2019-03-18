@@ -42,9 +42,9 @@ class SymTabImpl(val nestingLevel: Int) extends util.TreeMap[String, SymTabEntry
     */
   override def sortedEntries: util.ArrayList[SymTabEntry] = {
     val result = new util.ArrayList[SymTabEntry]()
-    for (entry <- this.values()) {
+    /*for (entry <- this.values())*/ this.values().stream().forEach(entry => {
       result.add(entry)
-    }
+    })
     result
   }
 }

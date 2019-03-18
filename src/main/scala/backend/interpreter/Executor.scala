@@ -1,7 +1,7 @@
 package backend.interpreter
 
 import backend.Backend
-import intermediate.{ICode, SymTab}
+import intermediate.{ICode, SymTab, SymTabStack}
 import message.{Message, MessageListener, MessageType}
 
 /**
@@ -13,9 +13,9 @@ class Executor extends Backend {
    * To be implemented by a compiler or an interpreter subclass.
    *
    * @param iCode  the intermediate code.
-   * @param symTab the symbol table.
+   * @param symTabStack the symbol table.
    */
-  override def process(iCode: ICode, symTab: SymTab): Unit = {
+  override def process(iCode: ICode, symTabStack: SymTabStack): Unit = {
     val startTime = System.currentTimeMillis()
     val elapsedTime = (System.currentTimeMillis() - startTime) / 1000f
     val executionCount = 0

@@ -1,6 +1,6 @@
 package backend
 
-import intermediate.{ICode, SymTab}
+import intermediate.{ICode, SymTab, SymTabStack}
 import message.{Message, MessageHandler, MessageListener, MessageProducer}
 
 /**
@@ -23,9 +23,9 @@ abstract class Backend extends MessageProducer {
     * To be implemented by a compiler or an interpreter subclass.
     *
     * @param iCode  the intermediate code.
-    * @param symTab the symbol table.
+    * @param symTabStack the symbol table stack.
     */
-  def process(iCode: ICode, symTab: SymTab): Unit
+  def process(iCode: ICode, symTabStack: SymTabStack): Unit
 
   /**
     * Add listener to the listener list.
