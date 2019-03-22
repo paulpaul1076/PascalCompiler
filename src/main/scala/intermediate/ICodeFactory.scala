@@ -1,5 +1,7 @@
 package intermediate
 
+import intermediate.icodeimpl.{ICodeImpl, ICodeNodeImpl}
+
 /**
   * A factory for creating objects that implement the intermediate code.
   */

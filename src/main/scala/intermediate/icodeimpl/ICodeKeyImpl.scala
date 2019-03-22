@@ -1,17 +1,19 @@
 package intermediate.icodeimpl
 
-/**
-  * Attribute keys for an intermediate code node.
-  */
-class ICodeKeyImpl {
+import intermediate.ICodeKey
 
+/**
+ * Attribute keys for an intermediate code node.
+ */
+class ICodeKeyImpl(val name: String) extends ICodeKey {
+  override def toString: String = name
 }
 
 /**
-  * Constants.
-  */
+ * Constants.
+ */
 object ICodeKeyImpl {
-  val LINE = new ICodeKeyImpl
-  val ID = new ICodeKeyImpl
-  val VALUE = new ICodeKeyImpl
+  val LINE = new ICodeKeyImpl("line")
+  val ID = new ICodeKeyImpl("id")
+  val VALUE = new ICodeKeyImpl("value")
 }
