@@ -27,8 +27,10 @@ class ParseTreePrinter(val ps: PrintStream) {
     */
   def print(iCode: ICode): Unit = {
     ps.println("\n===== INTERMEDIATE CODE =====\n")
-    printNode(iCode.getRoot.asInstanceOf[ICodeNodeImpl])
-    printLine()
+    if (iCode.getRoot != null) { // had a problem without the if.
+      printNode(iCode.getRoot.asInstanceOf[ICodeNodeImpl])
+      printLine()
+    }
   }
 
   /**

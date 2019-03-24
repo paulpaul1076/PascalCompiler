@@ -2,8 +2,8 @@ package frontend.pascal.parsers
 
 import java.util
 
-import frontend.{Parser, Token, TokenType}
 import frontend.pascal.{PascalErrorCode, PascalParserTD, PascalTokenType}
+import frontend.{Parser, Token, TokenType}
 import intermediate.icodeimpl.{ICodeKeyImpl, ICodeNodeTypeImpl}
 import intermediate.{ICodeFactory, ICodeNode, ICodeNodeType}
 
@@ -24,10 +24,7 @@ class ExpressionParser(pascalParser: PascalParserTD) extends PascalParserTD(pasc
    * @param token the initial token.
    * @return parsed subtree.
    */
-  def parse(token: Token): ICodeNode = {
-    parseExpression(token)
-  }
-
+  def parse(token: Token): ICodeNode = parseExpression(token)
 
   /**
    * Parses the expression.
@@ -40,7 +37,7 @@ class ExpressionParser(pascalParser: PascalParserTD) extends PascalParserTD(pasc
     var rootNode = parseSimpleExpression(curToken)
 
     curToken = currentToken()
-    var tokenType = curToken.getTokenType
+    val tokenType = curToken.getTokenType
 
     // Look for a relational operator.
     if (ExpressionParser.REL_OPS.contains(tokenType)) {
@@ -149,7 +146,7 @@ class ExpressionParser(pascalParser: PascalParserTD) extends PascalParserTD(pasc
       rootNode = opNode
 
       curToken = currentToken()
-      tokenType = curToken.getTokenType // TODO: is there a point in this?
+      tokenType = curToken.getTokenType
     }
 
     rootNode
@@ -163,7 +160,7 @@ class ExpressionParser(pascalParser: PascalParserTD) extends PascalParserTD(pasc
    */
   private def parseFactor(toket: Token): ICodeNode = {
     var curToken = toket
-    var tokenType = curToken.getTokenType
+    val tokenType = curToken.getTokenType
     var rootNode: ICodeNode = null
 
     tokenType.asInstanceOf[PascalTokenType] match {
