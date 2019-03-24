@@ -6,7 +6,7 @@ import backend.{Backend, BackendFactory}
 import frontend.{FrontendFactory, Parser, Source}
 import intermediate.{ICode, SymTab, SymTabStack}
 import pascal.listeners.{BackendMessageListener, ParserMessageListener, SourceMessageListener}
-import util.CrossReferencer
+import util.{CrossReferencer, ParseTreePrinter}
 
 /**
  * Compile or interpret a Pascal source program.
@@ -44,6 +44,11 @@ class Pascal(operation: String, filePath: String, flags: String) {
     if (xref) {
       val crossReferencer = new CrossReferencer
       crossReferencer.print(symTabStack)
+    }
+
+    if (intermediate) {
+      val treePrinter = new ParseTreePrinter(System.out)
+      treePrinter.print(iCode)
     }
 
     backend.process(iCode, symTabStack)

@@ -59,6 +59,8 @@ abstract class Parser(protected val scanner: Scanner) extends MessageProducer {
     */
   def getSymTab: SymTab = Parser.symTab
 
+  def getScanner = scanner
+
   // ---------- Message producing stuff
 
   /**

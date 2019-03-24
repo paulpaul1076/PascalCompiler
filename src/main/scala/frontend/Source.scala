@@ -1,7 +1,8 @@
 package frontend
 
-import message._
 import java.io.{BufferedReader, IOException}
+
+import message._
 
 // Open questions
 // 1) When can (currentPos == Source.BEFORE_NEW_LINE) happen in currentChar()?
@@ -66,6 +67,7 @@ class Source(private val reader: BufferedReader) extends MessageProducer {
     currentPos = Source.BEFORE_NEW_LINE
 
     if (line != null) {
+      line = line.replace("\t", "    ") // replace tabs with spaces, to be able to correctly point to errors
       lineNum += 1
       sendMessage(new Message(MessageType.SOURCE_LINE, List(lineNum, line)))
     }

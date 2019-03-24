@@ -2,7 +2,9 @@ package frontend.pascal
 
 import java.io.IOException
 
-import frontend.{EofToken, Parser, Scanner, Token}
+import frontend.pascal.parsers.StatementParser
+import frontend.{Parser, Scanner}
+import intermediate.{ICodeFactory, ICodeNode}
 import message.{Message, MessageType}
 
 /**
@@ -11,6 +13,10 @@ import message.{Message, MessageType}
  * @param scanner lexer for this parser.
  */
 class PascalParserTD(scanner: Scanner) extends Parser(scanner) {
+
+  def this(pascalParser: PascalParserTD) {
+    this(pascalParser.getScanner)
+  }
 
   /**
    * Fetches the next token by means of scanner.
@@ -21,38 +27,27 @@ class PascalParserTD(scanner: Scanner) extends Parser(scanner) {
     try {
       var token = nextToken()
       val startTime = System.currentTimeMillis()
+      iCode = ICodeFactory.createICode()
+      var rootNode: ICodeNode = null
 
-      while (!token.isInstanceOf[EofToken]) {
-        val tokenType = token.getTokenType
+      //while (!token.isInstanceOf[EofToken]) {
 
-        if (tokenType == PascalTokenType.IDENTIFIER) {
-          val name = token.getText.toLowerCase()
-
-          var entry = Parser.symTabStack.lookup(name)
-          if (entry == null) {
-            entry = Parser.symTabStack.enterLocal(name)
-          }
-          entry.appendLineNumber(token.getLineNumber)
-        } else if (tokenType == PascalTokenType.ERROR) {
-          PascalParserTD.errorHandler.flag(token, token.getValue.asInstanceOf[PascalErrorCode], this)
-        }
-
-//        if (tokenType != PascalTokenType.ERROR) {
-//          sendMessage(new Message(
-//            MessageType.TOKEN,
-//            List(
-//              token.getLineNumber,
-//              token.getPosition,
-//              tokenType,
-//              token.getText,
-//              token.getValue
-//            )
-//          ))
-//        } else {
-//          PascalParserTD.errorHandler.flag(token, token.getValue.asInstanceOf[PascalErrorCode], this)
-//        }
-
-        token = nextToken()
+      // Look for the begin token the parse a compound statement.
+      if (token.getTokenType == PascalTokenType.BEGIN) {
+        val statementParser = new StatementParser(this)
+        rootNode = statementParser.parse(token)
+        token = currentToken()
+      } else {
+        PascalParserTD.errorHandler.flag(token, PascalErrorCode.UNEXPECTED_TOKEN, this)
+      }
+      // Look for the final period.
+      if (token.getTokenType != PascalTokenType.DOT) {
+        PascalParserTD.errorHandler.flag(token, PascalErrorCode.MISSING_PERIOD, this)
+      }
+      token = currentToken()
+      // Set the parse tree root node.
+      if (rootNode != null) {
+        iCode.setRoot(rootNode)
       }
 
       val elapsedTime = (System.currentTimeMillis() - startTime) / 1000f
@@ -62,7 +57,7 @@ class PascalParserTD(scanner: Scanner) extends Parser(scanner) {
         elapsedTime))
       )
     } catch {
-      case ex: IOException => PascalParserTD.errorHandler.abortTranslation(PascalErrorCode.IO_ERROR, this)
+      case _: IOException => PascalParserTD.errorHandler.abortTranslation(PascalErrorCode.IO_ERROR, this)
     }
   }
 
@@ -78,4 +73,5 @@ class PascalParserTD(scanner: Scanner) extends Parser(scanner) {
   protected object PascalParserTD {
     val errorHandler = new PascalErrorHandler
   }
+
 }
