@@ -47,6 +47,7 @@ class PascalErrorHandler {
         fatalText
       ))
     )
+    System.exit(errorCode.getStatus)
   }
 
   def getErrorCount : Int = PascalErrorHandler.errorCount
