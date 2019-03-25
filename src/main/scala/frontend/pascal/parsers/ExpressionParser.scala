@@ -12,26 +12,26 @@ import intermediate.{ICodeFactory, ICodeNode, ICodeNodeType}
 //  I think it shouldn't be, because statements and expressions are 2 different things.
 
 /**
- * Class with the expression parsing logic.
- *
- * @param pascalParser parent parser.
- */
-class ExpressionParser(pascalParser: PascalParserTD) extends PascalParserTD(pascalParser) {
+  * Class with the expression parsing logic.
+  *
+  * @param pascalParser parent parser.
+  */
+class ExpressionParser(pascalParser: PascalParserTD) extends StatementParser(pascalParser) {
 
   /**
-   * Parses the expression.
-   *
-   * @param token the initial token.
-   * @return parsed subtree.
-   */
-  def parse(token: Token): ICodeNode = parseExpression(token)
+    * Parses the expression.
+    *
+    * @param token the initial token.
+    * @return parsed subtree.
+    */
+  override def parse(token: Token): ICodeNode = parseExpression(token)
 
   /**
-   * Parses the expression.
-   *
-   * @param toket the initial token.
-   * @return parsed subtree.
-   */
+    * Parses the expression.
+    *
+    * @param toket the initial token.
+    * @return parsed subtree.
+    */
   def parseExpression(toket: Token): ICodeNode = {
     var curToken = toket
     var rootNode = parseSimpleExpression(curToken)
@@ -61,11 +61,11 @@ class ExpressionParser(pascalParser: PascalParserTD) extends PascalParserTD(pasc
   }
 
   /**
-   * Parse a simple expression.
-   *
-   * @param toket the initial token.
-   * @return the root of the generated parse subtree.
-   */
+    * Parse a simple expression.
+    *
+    * @param toket the initial token.
+    * @return the root of the generated parse subtree.
+    */
   private def parseSimpleExpression(toket: Token): ICodeNode = {
     var signType: TokenType = null // type of leading sign (if any)
     var curToken = toket
@@ -115,11 +115,11 @@ class ExpressionParser(pascalParser: PascalParserTD) extends PascalParserTD(pasc
   }
 
   /**
-   * Parse term function.
-   *
-   * @param toket the current token.
-   * @return the tree corresponding to this term.
-   */
+    * Parse term function.
+    *
+    * @param toket the current token.
+    * @return the tree corresponding to this term.
+    */
   private def parseTerm(toket: Token): ICodeNode = {
     var curToken = toket
     var rootNode = parseFactor(curToken)
@@ -153,11 +153,11 @@ class ExpressionParser(pascalParser: PascalParserTD) extends PascalParserTD(pasc
   }
 
   /**
-   * Parse factor function.
-   *
-   * @param toket current token.
-   * @return a parse tree, corresponding to this factor.
-   */
+    * Parse factor function.
+    *
+    * @param toket current token.
+    * @return a parse tree, corresponding to this factor.
+    */
   private def parseFactor(toket: Token): ICodeNode = {
     var curToken = toket
     val tokenType = curToken.getTokenType
@@ -179,19 +179,19 @@ class ExpressionParser(pascalParser: PascalParserTD) extends PascalParserTD(pasc
         id.appendLineNumber(curToken.getLineNumber)
 
         curToken = nextToken()
-      case PascalTokenType.INTEGER    =>
+      case PascalTokenType.INTEGER =>
         // Create an INTEGER_CONSTANT node as the root node.
         rootNode = ICodeFactory.createICodeNode(ICodeNodeTypeImpl.INTEGER_CONSTANT)
         rootNode.setAttribute(ICodeKeyImpl.VALUE, curToken.getValue)
 
         curToken = nextToken()
-      case PascalTokenType.REAL       =>
+      case PascalTokenType.REAL =>
         // Create a REAL_CONSTANT node as the root node.
         rootNode = ICodeFactory.createICodeNode(ICodeNodeTypeImpl.REAL_CONSTANT)
         rootNode.setAttribute(ICodeKeyImpl.VALUE, curToken.getValue)
 
         curToken = nextToken()
-      case PascalTokenType.STRING     =>
+      case PascalTokenType.STRING =>
         val value = curToken.getValue.asInstanceOf[String]
 
         // Create a STRING_CONSTANT node as the root node.
@@ -199,7 +199,7 @@ class ExpressionParser(pascalParser: PascalParserTD) extends PascalParserTD(pasc
         rootNode.setAttribute(ICodeKeyImpl.VALUE, value)
 
         curToken = nextToken()
-      case PascalTokenType.NOT        =>
+      case PascalTokenType.NOT =>
         curToken = nextToken() // consume the NOT
 
         // Create a NOT node as the root node.
@@ -221,7 +221,7 @@ class ExpressionParser(pascalParser: PascalParserTD) extends PascalParserTD(pasc
         } else {
           PascalParserTD.errorHandler.flag(curToken, PascalErrorCode.MISSING_RIGHT_PAREN, this)
         }
-      case _                          => PascalParserTD.errorHandler.flag(curToken, PascalErrorCode.UNEXPECTED_TOKEN, this)
+      case _ => PascalParserTD.errorHandler.flag(curToken, PascalErrorCode.UNEXPECTED_TOKEN, this)
     }
 
     rootNode
@@ -229,13 +229,25 @@ class ExpressionParser(pascalParser: PascalParserTD) extends PascalParserTD(pasc
 }
 
 /**
- * Companion object.
- */
+  * Companion object.
+  */
 private object ExpressionParser {
+
+  val EXPR_START_SET = util.EnumSet.of[PascalTokenType](
+    PascalTokenType.MINUS,
+    PascalTokenType.PLUS,
+    PascalTokenType.IDENTIFIER,
+    PascalTokenType.INTEGER,
+    PascalTokenType.REAL,
+    PascalTokenType.STRING,
+    PascalTokenType.NOT,
+    PascalTokenType.LEFT_PAREN
+  )
+
   // ----- parseExpression
   /**
-   * Set of relational operators.
-   */
+    * Set of relational operators.
+    */
   val REL_OPS = new util.HashSet[PascalTokenType]()
   REL_OPS.add(PascalTokenType.EQUALS)
   REL_OPS.add(PascalTokenType.NOT_EQUALS)
@@ -245,8 +257,8 @@ private object ExpressionParser {
   REL_OPS.add(PascalTokenType.GREATER_EQUALS)
 
   /**
-   * Map relational operator tokens to node types.
-   */
+    * Map relational operator tokens to node types.
+    */
   val REL_OPS_MAP = new util.HashMap[PascalTokenType, ICodeNodeType]()
   REL_OPS_MAP.put(PascalTokenType.EQUALS, ICodeNodeTypeImpl.EQ)
   REL_OPS_MAP.put(PascalTokenType.NOT_EQUALS, ICodeNodeTypeImpl.NE)
@@ -257,16 +269,16 @@ private object ExpressionParser {
 
   // ----- parseSimpleExpression
   /**
-   * Set of additive operators.
-   */
+    * Set of additive operators.
+    */
   val ADD_OPS = new util.HashSet[PascalTokenType]()
   ADD_OPS.add(PascalTokenType.PLUS)
   ADD_OPS.add(PascalTokenType.MINUS)
   ADD_OPS.add(PascalTokenType.OR)
 
   /**
-   * Map additive operator tokens to node types.
-   */
+    * Map additive operator tokens to node types.
+    */
   val ADD_OPS_MAP = new util.HashMap[PascalTokenType, ICodeNodeTypeImpl]()
   ADD_OPS_MAP.put(PascalTokenType.PLUS, ICodeNodeTypeImpl.ADD)
   ADD_OPS_MAP.put(PascalTokenType.MINUS, ICodeNodeTypeImpl.SUBTRACT)
@@ -274,8 +286,8 @@ private object ExpressionParser {
 
   // ----- parseTerm
   /**
-   * Set of multiplicative operators.
-   */
+    * Set of multiplicative operators.
+    */
   val MULT_OPS = new util.HashSet[PascalTokenType]()
   MULT_OPS.add(PascalTokenType.STAR)
   MULT_OPS.add(PascalTokenType.SLASH)
@@ -284,8 +296,8 @@ private object ExpressionParser {
   MULT_OPS.add(PascalTokenType.AND)
 
   /**
-   * Map multiplicative operators to the appropriate node types.
-   */
+    * Map multiplicative operators to the appropriate node types.
+    */
   val MULT_OPS_MAP = new util.HashMap[PascalTokenType, ICodeNodeType]()
   MULT_OPS_MAP.put(PascalTokenType.STAR, ICodeNodeTypeImpl.MULTIPLY)
   MULT_OPS_MAP.put(PascalTokenType.SLASH, ICodeNodeTypeImpl.FLOAT_DIVIDE)
