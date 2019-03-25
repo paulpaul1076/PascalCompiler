@@ -1,6 +1,6 @@
 BEGIN
 	BEGIN {Temperature conversions.}
-		five := -1 + 2 - 3 + 4 +3;
+		five := -1 + 2 - 3 + 4 + 3;
 		ratio := five/9.0;
 
 		fahrenheit := 72;
@@ -20,6 +20,10 @@ BEGIN
 		number := 2;
 		root := number;
 		root := (number/root + root)/2;
+		root := (number/root + root)/2;
+		root := (number/root + root)/2;
+		root := (number/root + root)/2;
+        root := (number/root + root)/2;
 	END;
 
 	ch := 'x';

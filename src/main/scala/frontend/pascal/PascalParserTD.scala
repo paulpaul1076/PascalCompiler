@@ -32,7 +32,7 @@ class PascalParserTD(scanner: Scanner) extends Parser(scanner) {
 
       //while (!token.isInstanceOf[EofToken]) {
 
-      // Look for the begin token the parse a compound statement.
+      // Look for the begin token then parse a compound statement.
       if (token.getTokenType == PascalTokenType.BEGIN) {
         val statementParser = new StatementParser(this)
         rootNode = statementParser.parse(token)

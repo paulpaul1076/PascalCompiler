@@ -18,7 +18,7 @@ object BackendFactory {
     if (operation.equalsIgnoreCase("compile")) {
       new CodeGenerator
     } else if (operation.equalsIgnoreCase("execute")) {
-      new Executor
+      new Executor(null)
     } else {
       throw new Exception("Backend factory: Invalid operation '" + operation + "'")
     }

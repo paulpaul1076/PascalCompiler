@@ -4,13 +4,13 @@ import java.io.{BufferedReader, FileReader}
 
 import backend.{Backend, BackendFactory}
 import frontend.{FrontendFactory, Parser, Source}
-import intermediate.{ICode, SymTab, SymTabStack}
+import intermediate.{ICode, SymTabStack}
 import pascal.listeners.{BackendMessageListener, ParserMessageListener, SourceMessageListener}
 import util.{CrossReferencer, ParseTreePrinter}
 
 /**
- * Compile or interpret a Pascal source program.
- */
+  * Compile or interpret a Pascal source program.
+  */
 class Pascal(operation: String, filePath: String, flags: String) {
 
   private var parser: Parser = _
@@ -31,7 +31,7 @@ class Pascal(operation: String, filePath: String, flags: String) {
     parser = FrontendFactory.createParser("Pascal", "top-down", source)
     parser.addMessageListener(new ParserMessageListener())
 
-    backend = BackendFactory.createBackend(operation)
+    backend = BackendFactory.createBackend(operation) // execute(interpret) or compile
     backend.addMessageListener(new BackendMessageListener())
 
     parser.parse()
@@ -41,12 +41,12 @@ class Pascal(operation: String, filePath: String, flags: String) {
     //symTab = parser.getSymTab // TODO: Remove it altogether?
     symTabStack = Parser.symTabStack
 
-    if (xref) {
+    if (xref) { // Print the symbol table
       val crossReferencer = new CrossReferencer
       crossReferencer.print(symTabStack)
     }
 
-    if (intermediate) {
+    if (intermediate) { // Print AST
       val treePrinter = new ParseTreePrinter(System.out)
       treePrinter.print(iCode)
     }
@@ -59,8 +59,8 @@ class Pascal(operation: String, filePath: String, flags: String) {
 }
 
 /**
- * Companion object.
- */
+  * Companion object.
+  */
 object Pascal {
   val FLAGS = "[-ix]"
   val USAGE = "Usage: Pascal execute|compile " + FLAGS + " <source file path>"
@@ -78,10 +78,10 @@ object Pascal {
       "\n%,20.2f seconds total code generation time.\n"
 
   /**
-   * Program's entry point.
-   *
-   * @param args cmd args.
-   */
+    * Program's entry point.
+    *
+    * @param args cmd args.
+    */
   def main(args: Array[String]): Unit = {
     try {
       val operation = args(0)
