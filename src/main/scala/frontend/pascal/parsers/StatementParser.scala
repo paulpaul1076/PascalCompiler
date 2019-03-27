@@ -24,7 +24,7 @@ class StatementParser(pascalParser: PascalParserTD) extends PascalParserTD(pasca
     */
   def parseList(toket: Token, parentNode: ICodeNode, terminator: PascalTokenType, errorCode: PascalErrorCode): Unit = {
     // Synchronization set for the terminator.
-    val terminatorSet = StatementParser.STMT_START_SET.clone()
+    val terminatorSet = StatementParser.STMT_START_SET.clone().asInstanceOf[util.HashSet[PascalTokenType]]
     terminatorSet.add(terminator)
 
     // Loop to parse each statement until the END token.
@@ -83,7 +83,7 @@ class StatementParser(pascalParser: PascalParserTD) extends PascalParserTD(pasca
         assignmentStatementParser.parse(token)
       case PascalTokenType.REPEAT =>
         val repeatStatementParser = new RepeatStatementParser(this)
-        repeatStatementParser.parser(token)
+        repeatStatementParser.parse(token)
       case PascalTokenType.WHILE =>
         val whileStatementParser = new WhileStatementParser(this)
         whileStatementParser.parse(token)
@@ -92,7 +92,7 @@ class StatementParser(pascalParser: PascalParserTD) extends PascalParserTD(pasca
         forStatementParser.parse(token)
       case PascalTokenType.IF =>
         val ifStatementParser = new IfStatementParser(this)
-        ifStatementParser.parse(this)
+        ifStatementParser.parse(token)
       case PascalTokenType.CASE =>
         val caseStatementParser = new CaseStatementParser(this)
         caseStatementParser.parse(token)
@@ -121,25 +121,23 @@ private object StatementParser {
   /**
     * Synchronization set for starting a statement.
     */
-  val STMT_START_SET = util.EnumSet.of[PascalTokenType](
-    PascalTokenType.BEGIN,
-    PascalTokenType.CASE,
-    PascalTokenType.FOR,
-    PascalTokenType.IF,
-    PascalTokenType.REPEAT,
-    PascalTokenType.WHILE,
-    PascalTokenType.IDENTIFIER,
-    PascalTokenType.SEMICOLON // TODO: this is here in order to "handle the empty statement", what does that mean?
-  )
+  val STMT_START_SET = new util.HashSet[PascalTokenType]()
+  STMT_START_SET.add(PascalTokenType.BEGIN)
+  STMT_START_SET.add(PascalTokenType.CASE)
+  STMT_START_SET.add(PascalTokenType.FOR)
+  STMT_START_SET.add(PascalTokenType.IF)
+  STMT_START_SET.add(PascalTokenType.REPEAT)
+  STMT_START_SET.add(PascalTokenType.WHILE)
+  STMT_START_SET.add(PascalTokenType.IDENTIFIER)
+  STMT_START_SET.add(PascalTokenType.SEMICOLON) // TODO: this is here in order to "handle the empty statement", what does that mean?
 
   /**
     * Synchronization set for following a statement.
     */
-  val STMT_FOLLOW_SET = util.EnumSet.of[PascalTokenType](
-    PascalTokenType.SEMICOLON,
-    PascalTokenType.END,
-    PascalTokenType.ELSE,
-    PascalTokenType.UNTIL,
-    PascalTokenType.DOT
-  )
+  val STMT_FOLLOW_SET = new util.HashSet[PascalTokenType]()
+  STMT_FOLLOW_SET.add(PascalTokenType.SEMICOLON)
+  STMT_FOLLOW_SET.add(PascalTokenType.END)
+  STMT_FOLLOW_SET.add(PascalTokenType.ELSE)
+  STMT_FOLLOW_SET.add(PascalTokenType.UNTIL)
+  STMT_FOLLOW_SET.add(PascalTokenType.DOT)
 }

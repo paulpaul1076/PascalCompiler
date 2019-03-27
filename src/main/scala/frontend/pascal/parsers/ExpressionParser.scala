@@ -233,16 +233,16 @@ class ExpressionParser(pascalParser: PascalParserTD) extends StatementParser(pas
   */
 private object ExpressionParser {
 
-  val EXPR_START_SET = util.EnumSet.of[PascalTokenType](
-    PascalTokenType.MINUS,
-    PascalTokenType.PLUS,
-    PascalTokenType.IDENTIFIER,
-    PascalTokenType.INTEGER,
-    PascalTokenType.REAL,
-    PascalTokenType.STRING,
-    PascalTokenType.NOT,
-    PascalTokenType.LEFT_PAREN
-  )
+  val EXPR_START_SET = new util.HashSet[PascalTokenType]()
+  EXPR_START_SET.add(PascalTokenType.MINUS)
+  EXPR_START_SET.add(PascalTokenType.PLUS)
+  EXPR_START_SET.add(PascalTokenType.IDENTIFIER)
+  EXPR_START_SET.add(PascalTokenType.INTEGER)
+  EXPR_START_SET.add(PascalTokenType.REAL)
+  EXPR_START_SET.add(PascalTokenType.STRING)
+  EXPR_START_SET.add(PascalTokenType.NOT)
+  EXPR_START_SET.add(PascalTokenType.LEFT_PAREN)
+
 
   // ----- parseExpression
   /**

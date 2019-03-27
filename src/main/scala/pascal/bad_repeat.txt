@@ -1,0 +1,4 @@
+BEGIN {REPEAT statements.}
+    REPEAT UNTIL five := 5;
+    REPEAT ratio := 9 UNTIL;
+END.

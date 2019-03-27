@@ -61,7 +61,7 @@ class AssignmentStatementParser(pascalParser: PascalParserTD) extends StatementP
 }
 
 private object AssignmentStatementParser {
-  val COLON_EQUALS_SET: util.EnumSet[PascalTokenType] = ExpressionParser.EXPR_START_SET.clone()
+  val COLON_EQUALS_SET: util.HashSet[PascalTokenType] = ExpressionParser.EXPR_START_SET.clone().asInstanceOf[util.HashSet[PascalTokenType]]
   COLON_EQUALS_SET.add(PascalTokenType.COLON_EQUALS)
   COLON_EQUALS_SET.addAll(StatementParser.STMT_FOLLOW_SET)
 }

@@ -77,7 +77,7 @@ class PascalParserTD(scanner: Scanner) extends Parser(scanner) {
     * @param syncSet the set of token types for synchronizing the parser.
     * @return the token where the parser has synchronized.
     */
-  def synchronize(syncSet: util.EnumSet[PascalTokenType]): Token = {
+  def synchronize(syncSet: util.HashSet[PascalTokenType]): Token = {
     var token = currentToken()
 
     // If the current token is not in the synchronization set,
