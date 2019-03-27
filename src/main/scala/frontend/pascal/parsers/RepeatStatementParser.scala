@@ -5,7 +5,18 @@ import frontend.pascal.{PascalErrorCode, PascalParserTD, PascalTokenType}
 import intermediate.icodeimpl.ICodeNodeTypeImpl
 import intermediate.{ICodeFactory, ICodeNode}
 
+/**
+ * RepeatStatement parser
+ *
+ * @param pascalParserTD parent parser.
+ */
 class RepeatStatementParser(pascalParserTD: PascalParserTD) extends StatementParser(pascalParserTD) {
+  /**
+   * Parse a repeat statement
+   *
+   * @param toket the beginning token.
+   * @return the root of the generated parse tree.
+   */
   override def parse(toket: Token): ICodeNode = {
     var curToken = nextToken() // Consume the REPEAT
 
