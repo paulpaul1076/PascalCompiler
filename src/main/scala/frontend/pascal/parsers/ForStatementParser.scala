@@ -8,23 +8,23 @@ import intermediate.icodeimpl.{ICodeKeyImpl, ICodeNodeTypeImpl}
 import intermediate.{ICodeFactory, ICodeNode}
 
 /**
- * For statement parser.
- *
- * @param pascalParserTD parent parser.
- */
+  * For statement parser.
+  *
+  * @param pascalParserTD parent parser.
+  */
 class ForStatementParser(pascalParserTD: PascalParserTD) extends StatementParser(pascalParserTD) {
 
   /**
-   * Parse a for statement.
-   *
-   * @param token the initial token
-   * @return the root of the generated parse tree.
-   */
-  override def parse(token: Token): ICodeNode = {
+    * Parse a for statement.
+    *
+    * @param toket the initial token
+    * @return the root of the generated parse tree.
+    */
+  override def parse(toket: Token): ICodeNode = {
     var curToken = nextToken() // consume the FOR
     val targetToken = curToken
 
-    //Create the loop COMPOUND, LOOP, and TEST nodes.
+    // Create the loop COMPOUND, LOOP, and TEST nodes.
     val compoundNode = ICodeFactory.createICodeNode(ICodeNodeTypeImpl.COMPOUND)
     val loopNode = ICodeFactory.createICodeNode(ICodeNodeTypeImpl.LOOP)
     val testNode = ICodeFactory.createICodeNode(ICodeNodeTypeImpl.TEST)
@@ -72,7 +72,7 @@ class ForStatementParser(pascalParserTD: PascalParserTD) extends StatementParser
     loopNode.addChild(testNode)
 
     // Synchronize at the DO.
-    curToken = synchronize(WhileStatementParser.DO_SET)
+    curToken = synchronize(ForStatementParser.DO_SET)
     if (curToken.getTokenType == PascalTokenType.DO) {
       curToken = nextToken() // consume the DO
     } else {
@@ -91,7 +91,7 @@ class ForStatementParser(pascalParserTD: PascalParserTD) extends StatementParser
 
     // Create the arithmetic operator node:
     // ADD for TO, or SUBTRACT for DOWNTO.
-    val arithOpNode = ICodeFactory.createICodeNode(if (direction == PascalTokenType.DO) ICodeNodeTypeImpl.ADD else ICodeNodeTypeImpl.SUBTRACT)
+    val arithOpNode = ICodeFactory.createICodeNode(if (direction == PascalTokenType.TO) ICodeNodeTypeImpl.ADD else ICodeNodeTypeImpl.SUBTRACT)
 
     // The operator node adopts a copy of the loop variable as its
     // first child and the value 1 as its second child.
@@ -113,10 +113,16 @@ class ForStatementParser(pascalParserTD: PascalParserTD) extends StatementParser
   }
 }
 
-
+/**
+  * Companion object.
+  */
 object ForStatementParser {
   val TO_DOWNTO_SET = ExpressionParser.EXPR_START_SET.clone().asInstanceOf[util.HashSet[PascalTokenType]]
-  TO_DOWNTO_SET.add(PascalTokenType.DO)
+  TO_DOWNTO_SET.add(PascalTokenType.TO)
   TO_DOWNTO_SET.add(PascalTokenType.DOWNTO)
   TO_DOWNTO_SET.addAll(StatementParser.STMT_FOLLOW_SET)
+
+  val DO_SET = StatementParser.STMT_START_SET.clone().asInstanceOf[util.HashSet[PascalTokenType]]
+  DO_SET.add(PascalTokenType.DO)
+  DO_SET.addAll(StatementParser.STMT_FOLLOW_SET)
 }
