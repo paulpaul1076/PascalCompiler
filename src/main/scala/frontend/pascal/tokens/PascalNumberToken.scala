@@ -1,7 +1,7 @@
 package frontend.pascal.tokens
 
 import frontend.Source
-import frontend.pascal.{PascalErrorCode, PascalErrorHandler, PascalToken, PascalTokenType}
+import frontend.pascal.{PascalErrorCode, PascalToken, PascalTokenType}
 
 /**
  * Token class for numbers, which can be reals or ints.
@@ -15,6 +15,11 @@ class PascalNumberToken(source: Source) extends PascalToken(source) {
     text = textBuffer.toString()
   }
 
+  /**
+   * Extract a number token.
+   *
+   * @param textBuffer buffer with the number string.
+   */
   protected def extractNumber(textBuffer: StringBuilder): Unit = {
     var wholeDigits: String = null
     var fractionDigits: String = null
@@ -189,6 +194,9 @@ class PascalNumberToken(source: Source) extends PascalToken(source) {
   }
 }
 
+/**
+ * Companion object.
+ */
 private object PascalNumberToken {
   val MAX_EXPONENT = 37
 }

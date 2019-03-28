@@ -60,6 +60,9 @@ class AssignmentStatementParser(pascalParser: PascalParserTD) extends StatementP
   }
 }
 
+/**
+ * Companion object.
+ */
 private object AssignmentStatementParser {
   val COLON_EQUALS_SET: util.HashSet[PascalTokenType] = ExpressionParser.EXPR_START_SET.clone().asInstanceOf[util.HashSet[PascalTokenType]]
   COLON_EQUALS_SET.add(PascalTokenType.COLON_EQUALS)

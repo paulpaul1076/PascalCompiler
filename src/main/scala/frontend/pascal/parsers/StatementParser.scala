@@ -8,20 +8,20 @@ import intermediate.icodeimpl.{ICodeKeyImpl, ICodeNodeTypeImpl}
 import intermediate.{ICodeFactory, ICodeNode}
 
 /**
-  * Statement parser.
-  *
-  * @param pascalParser parent parser.
-  */
+ * Statement parser.
+ *
+ * @param pascalParser parent parser.
+ */
 class StatementParser(pascalParser: PascalParserTD) extends PascalParserTD(pascalParser) {
 
   /**
-    * Parses a list of statements.
-    *
-    * @param toket      the starting token.
-    * @param parentNode parent node of this statement's node.
-    * @param terminator the token type of ndoe that terminates the list.
-    * @param errorCode  errorCode if the terminator token is missing.
-    */
+   * Parses a list of statements.
+   *
+   * @param toket      the starting token.
+   * @param parentNode parent node of this statement's node.
+   * @param terminator the token type of ndoe that terminates the list.
+   * @param errorCode  errorCode if the terminator token is missing.
+   */
   def parseList(toket: Token, parentNode: ICodeNode, terminator: PascalTokenType, errorCode: PascalErrorCode): Unit = {
     // Synchronization set for the terminator.
     val terminatorSet = StatementParser.STMT_START_SET.clone().asInstanceOf[util.HashSet[PascalTokenType]]
@@ -43,13 +43,8 @@ class StatementParser(pascalParser: PascalParserTD) extends PascalParserTD(pasca
       }
       // If at the start of the next assignment statement,
       // then missing a semicolon.
-      else if (tokenType == PascalTokenType.IDENTIFIER) {
+      else if (StatementParser.STMT_START_SET.contains(tokenType)) {
         PascalParserTD.errorHandler.flag(curToken, PascalErrorCode.MISSING_SEMICOLON, this)
-      }
-      // Unexpected token
-      else if (tokenType != terminator) {
-        PascalParserTD.errorHandler.flag(curToken, PascalErrorCode.UNEXPECTED_TOKEN, this)
-        curToken = nextToken()
       }
 
       // Synchronize at the start of the next statement
@@ -68,35 +63,35 @@ class StatementParser(pascalParser: PascalParserTD) extends PascalParserTD(pasca
   // TODO: Should this be a protected method?
 
   /**
-    * Parse a statement. To be overridden by the specialized statement parser subclasses.
-    *
-    * @param token the initial token
-    * @return the root of the generated parse tree.
-    */
+   * Parse a statement. To be overridden by the specialized statement parser subclasses.
+   *
+   * @param token the initial token
+   * @return the root of the generated parse tree.
+   */
   def parse(token: Token): ICodeNode = {
     val statementNode = token.getTokenType match {
-      case PascalTokenType.BEGIN =>
+      case PascalTokenType.BEGIN      =>
         val compoundStatementParser = new CompoundStatementParser(this)
         compoundStatementParser.parse(token)
       case PascalTokenType.IDENTIFIER =>
         val assignmentStatementParser = new AssignmentStatementParser(this)
         assignmentStatementParser.parse(token)
-      case PascalTokenType.REPEAT =>
+      case PascalTokenType.REPEAT     =>
         val repeatStatementParser = new RepeatStatementParser(this)
         repeatStatementParser.parse(token)
-      case PascalTokenType.WHILE =>
+      case PascalTokenType.WHILE      =>
         val whileStatementParser = new WhileStatementParser(this)
         whileStatementParser.parse(token)
-      case PascalTokenType.FOR =>
+      case PascalTokenType.FOR        =>
         val forStatementParser = new ForStatementParser(this)
         forStatementParser.parse(token)
-      case PascalTokenType.IF =>
+      case PascalTokenType.IF         =>
         val ifStatementParser = new IfStatementParser(this)
         ifStatementParser.parse(token)
-      case PascalTokenType.CASE =>
+      case PascalTokenType.CASE       =>
         val caseStatementParser = new CaseStatementParser(this)
         caseStatementParser.parse(token)
-      case _ =>
+      case _                          =>
         ICodeFactory.createICodeNode(ICodeNodeTypeImpl.NO_OP)
     }
 
@@ -105,11 +100,11 @@ class StatementParser(pascalParser: PascalParserTD) extends PascalParserTD(pasca
   }
 
   /**
-    * Set the current line number as a statement node attribute.
-    *
-    * @param node  ICodeNode.
-    * @param token the initial token.
-    */
+   * Set the current line number as a statement node attribute.
+   *
+   * @param node  ICodeNode.
+   * @param token the initial token.
+   */
   protected def setLineNumber(node: ICodeNode, token: Token): Unit = {
     if (node != null) {
       node.setAttribute(ICodeKeyImpl.LINE, token.getLineNumber)
@@ -117,10 +112,13 @@ class StatementParser(pascalParser: PascalParserTD) extends PascalParserTD(pasca
   }
 }
 
+/**
+ * Companion object.
+ */
 private object StatementParser {
   /**
-    * Synchronization set for starting a statement.
-    */
+   * Synchronization set for starting a statement.
+   */
   val STMT_START_SET = new util.HashSet[PascalTokenType]()
   STMT_START_SET.add(PascalTokenType.BEGIN)
   STMT_START_SET.add(PascalTokenType.CASE)
@@ -132,8 +130,8 @@ private object StatementParser {
   STMT_START_SET.add(PascalTokenType.SEMICOLON) // TODO: this is here in order to "handle the empty statement", what does that mean?
 
   /**
-    * Synchronization set for following a statement.
-    */
+   * Synchronization set for following a statement.
+   */
   val STMT_FOLLOW_SET = new util.HashSet[PascalTokenType]()
   STMT_FOLLOW_SET.add(PascalTokenType.SEMICOLON)
   STMT_FOLLOW_SET.add(PascalTokenType.END)
