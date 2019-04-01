@@ -1,17 +1,18 @@
 package frontend.pascal
 
 import java.io.IOException
+import java.util
 
 import frontend.pascal.parsers.StatementParser
-import frontend.{Parser, Scanner}
+import frontend.{EofToken, Parser, Scanner, Token}
 import intermediate.{ICodeFactory, ICodeNode}
 import message.{Message, MessageType}
 
 /**
- * Top down pascal parser.
- *
- * @param scanner lexer for this parser.
- */
+  * Top down pascal parser.
+  *
+  * @param scanner lexer for this parser.
+  */
 class PascalParserTD(scanner: Scanner) extends Parser(scanner) {
 
   def this(pascalParser: PascalParserTD) {
@@ -19,9 +20,9 @@ class PascalParserTD(scanner: Scanner) extends Parser(scanner) {
   }
 
   /**
-   * Fetches the next token by means of scanner.
-   * For each token it sends a token message to every subscribed listener.
-   */
+    * Fetches the next token by means of scanner.
+    * For each token it sends a token message to every subscribed listener.
+    */
   override def parse(): Unit = {
 
     try {
@@ -62,12 +63,36 @@ class PascalParserTD(scanner: Scanner) extends Parser(scanner) {
   }
 
   /**
-   * Return the number of syntax errors found by the parser.
-   *
-   * @return error count.
-   */
+    * Return the number of syntax errors found by the parser.
+    *
+    * @return error count.
+    */
   override def getErrorCount: Int = {
     PascalParserTD.errorHandler.getErrorCount
+  }
+
+  /**
+    * Synchronize the parser.
+    *
+    * @param syncSet the set of token types for synchronizing the parser.
+    * @return the token where the parser has synchronized.
+    */
+  def synchronize(syncSet: util.HashSet[PascalTokenType]): Token = {
+    var token = currentToken()
+
+    // If the current token is not in the synchronization set,
+    // then it is unexpected and the parser must recover.
+    if (!syncSet.contains(token.getTokenType)) {
+      // Flag the unexpected token.
+      PascalParserTD.errorHandler.flag(token, PascalErrorCode.UNEXPECTED_TOKEN, this)
+
+      // Recover by skipping tokens that are not
+      // in the synchronization set.
+      do {
+        token = nextToken()
+      } while (!token.isInstanceOf[EofToken] && !syncSet.contains(token.getTokenType))
+    }
+    token
   }
 
   protected object PascalParserTD {

@@ -1,23 +1,24 @@
 package frontend.pascal.parsers
 
-import frontend.{Parser, Token}
+import java.util
+
 import frontend.pascal.{PascalErrorCode, PascalParserTD, PascalTokenType}
+import frontend.{Parser, Token}
 import intermediate.icodeimpl.{ICodeKeyImpl, ICodeNodeTypeImpl}
 import intermediate.{ICodeFactory, ICodeNode}
 
 /**
- * Assignment parser.
- *
- * @param pascalParser parent parser.
- */
+  * Assignment parser.
+  *
+  * @param pascalParser parent parser.
+  */
 class AssignmentStatementParser(pascalParser: PascalParserTD) extends StatementParser(pascalParser) {
-
   /**
-   * Parse an assignment statement.
-   *
-   * @param toket the initial token.
-   * @return the root of the generated parse tree.
-   */
+    * Parse an assignment statement.
+    *
+    * @param toket the initial token.
+    * @return the root of the generated parse tree.
+    */
   override def parse(toket: Token): ICodeNode = {
     // Create an ASSIGN node.
     val assignNode = ICodeFactory.createICodeNode(ICodeNodeTypeImpl.ASSIGN)
@@ -39,6 +40,9 @@ class AssignmentStatementParser(pascalParser: PascalParserTD) extends StatementP
     // The ASSIGN node adopts the variable node as its first child.
     assignNode.addChild(variableNode)
 
+    //Synchronize on the := token.
+    curToken = synchronize(AssignmentStatementParser.COLON_EQUALS_SET)
+
     // Look for the := token.
     if (curToken.getTokenType == PascalTokenType.COLON_EQUALS) {
       curToken = nextToken() // consume the :=
@@ -53,4 +57,13 @@ class AssignmentStatementParser(pascalParser: PascalParserTD) extends StatementP
 
     assignNode
   }
+}
+
+/**
+ * Companion object.
+ */
+private object AssignmentStatementParser {
+  val COLON_EQUALS_SET: util.HashSet[PascalTokenType] = ExpressionParser.EXPR_START_SET.clone().asInstanceOf[util.HashSet[PascalTokenType]]
+  COLON_EQUALS_SET.add(PascalTokenType.COLON_EQUALS)
+  COLON_EQUALS_SET.addAll(StatementParser.STMT_FOLLOW_SET)
 }
