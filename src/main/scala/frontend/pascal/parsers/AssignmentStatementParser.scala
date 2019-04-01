@@ -13,7 +13,6 @@ import intermediate.{ICodeFactory, ICodeNode}
   * @param pascalParser parent parser.
   */
 class AssignmentStatementParser(pascalParser: PascalParserTD) extends StatementParser(pascalParser) {
-
   /**
     * Parse an assignment statement.
     *
