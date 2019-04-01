@@ -10,9 +10,17 @@ import intermediate.{ICodeFactory, ICodeNode}
 
 /**
  * The parser of compound statements.
+ *
  * @param pascalParser parent parser
  */
 class CompoundStatementParser(pascalParser: PascalParserTD) extends StatementParser(pascalParser) {
+
+  /**
+   * Parse a compound statement.
+   *
+   * @param toket start token.
+   * @return the root of the generated parse tree.
+   */
   override def parse(toket: Token): ICodeNode = {
     var curToken = nextToken() // consume the BEGIN
 

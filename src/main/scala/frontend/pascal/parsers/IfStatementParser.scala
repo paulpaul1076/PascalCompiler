@@ -8,18 +8,18 @@ import intermediate.icodeimpl.ICodeNodeTypeImpl
 import intermediate.{ICodeFactory, ICodeNode}
 
 /**
-  * If statement parser.
-  *
-  * @param pascalParserTD parent parser.
-  */
+ * IfStatementParser.
+ *
+ * @param pascalParserTD parent parser.
+ */
 class IfStatementParser(pascalParserTD: PascalParserTD) extends StatementParser(pascalParserTD) {
 
   /**
-    * Parse an if statement.
-    *
-    * @param toket input token.
-    * @return the root of the generated parse tree.
-    */
+   * Parse an if statement.
+   *
+   * @param toket start token.
+   * @return the root of the generated parse tree.
+   */
   override def parse(toket: Token): ICodeNode = {
     var curToken = nextToken() // skip the IF
 

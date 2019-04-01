@@ -102,5 +102,5 @@ class Token(protected val source: Source) {
   }
 
   //--------------- from Source
-  def getLineNumber : Int = source.getLineNum
+  def getLineNumber: Int = lineNum
 }

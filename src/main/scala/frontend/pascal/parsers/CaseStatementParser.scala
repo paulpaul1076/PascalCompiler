@@ -7,7 +7,19 @@ import frontend.{EofToken, Token, TokenType}
 import intermediate.icodeimpl.{ICodeKeyImpl, ICodeNodeTypeImpl}
 import intermediate.{ICodeFactory, ICodeNode}
 
+/**
+ * CaseStatementParser.
+ *
+ * @param pascalParserTD parent parser.
+ */
 class CaseStatementParser(pascalParserTD: PascalParserTD) extends StatementParser(pascalParserTD) {
+
+  /**
+   * Parse a case statement.
+   *
+   * @param toket starting token.
+   * @return the root of the generated parse tree.
+   */
   override def parse(toket: Token): ICodeNode = {
     var curToken = nextToken() // consume the CASE
 
@@ -128,9 +140,9 @@ class CaseStatementParser(pascalParserTD: PascalParserTD) extends StatementParse
     // Parse the constant.
     curToken.getTokenType.asInstanceOf[PascalTokenType] match {
       case PascalTokenType.IDENTIFIER => constantNode = parseIdentifierConstant(curToken, sign)
-      case PascalTokenType.INTEGER => constantNode = parseIntegerConstant(curToken.getText, sign)
-      case PascalTokenType.STRING => constantNode = parseCharacterConstant(curToken, curToken.getValue.asInstanceOf[String], sign)
-      case _ => PascalParserTD.errorHandler.flag(curToken, PascalErrorCode.INVALID_CONSTANT, this)
+      case PascalTokenType.INTEGER    => constantNode = parseIntegerConstant(curToken.getText, sign)
+      case PascalTokenType.STRING     => constantNode = parseCharacterConstant(curToken, curToken.getValue.asInstanceOf[String], sign)
+      case _                          => PascalParserTD.errorHandler.flag(curToken, PascalErrorCode.INVALID_CONSTANT, this)
     }
 
     // Check for reused constants.
@@ -186,8 +198,8 @@ class CaseStatementParser(pascalParserTD: PascalParserTD) extends StatementParse
 
 
 /**
-  * Companion object for this class.
-  */
+ * Companion object for this class.
+ */
 object CaseStatementParser {
   // Synchronization set for starting a CASE option constant.
   val CONSTANT_START_SET = new util.HashSet[PascalTokenType]()
