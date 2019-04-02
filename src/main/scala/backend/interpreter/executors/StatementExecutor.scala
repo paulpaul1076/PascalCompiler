@@ -33,6 +33,15 @@ class StatementExecutor(parent: Executor) extends Executor(parent) {
       case ICodeNodeTypeImpl.ASSIGN   =>
         val assignmentExecutor = new AssignmentExecutor(this)
         assignmentExecutor.execute(node)
+      case ICodeNodeTypeImpl.LOOP =>
+        val loopExecutor = new LoopExecutor(this)
+        loopExecutor.execute(node)
+      case ICodeNodeTypeImpl.IF =>
+        val ifExecutor = new IfExecutor(this)
+        ifExecutor.execute(node)
+      case ICodeNodeTypeImpl.SELECT =>
+        val selectExecutor = new SelectExecutorFast(this)
+        selectExecutor.execute(node)
       case ICodeNodeTypeImpl.NO_OP    =>
         null
       case _                          =>
