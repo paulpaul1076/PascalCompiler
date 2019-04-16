@@ -1,6 +1,6 @@
 package frontend
 
-import intermediate.{ICode, SymTab, SymTabFactory, SymTabStack}
+import intermediate.{SymTab, SymTabFactory, SymTabStack}
 import message.{Message, MessageHandler, MessageListener, MessageProducer}
 
 /**
@@ -9,11 +9,6 @@ import message.{Message, MessageHandler, MessageListener, MessageProducer}
   * @param scanner scanner.
   */
 abstract class Parser(protected val scanner: Scanner) extends MessageProducer {
-
-  /**
-    * Intermediate code.
-    */
-  protected var iCode: ICode = _
 
   /**
     * Method to be overridden by a specific parser.
@@ -44,13 +39,6 @@ abstract class Parser(protected val scanner: Scanner) extends MessageProducer {
   def nextToken(): Token = {
     scanner.nextToken()
   }
-
-  /**
-    * Getter for the intermediate code.
-    *
-    * @return iCode.
-    */
-  def getICode: ICode = iCode
 
   /**
     * Getter for the symbol table.

@@ -41,4 +41,40 @@ trait SymTabStack {
     * @return SymTabEntry instance.
     */
   def lookup(name: String): SymTabEntry
+
+  /**
+    * Setter.
+    *
+    * @param entry the symbol table entry for the main program identifier.
+    */
+  def setProgramId(entry: SymTabEntry): Unit
+
+  /**
+    * Getter.
+    *
+    * @return the symbol table entry for the main program identifier.
+    */
+  def getProgramId(): SymTabEntry
+
+  /**
+    * Push a new symbol table onto the stack.
+    *
+    * @return the pushed symbol table.
+    */
+  def push(): SymTab
+
+  /**
+    * Push a symbol table onto the stack.
+    *
+    * @param symTab the symbol table to push.
+    * @return the pushed symbol table.
+    */
+  def push(symTab: SymTab): SymTab
+
+  /**
+    * Pop a symbol table off the stack.
+    *
+    * @return the popped symbol table.
+    */
+  def pop(): SymTab
 }

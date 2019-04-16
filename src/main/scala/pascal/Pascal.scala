@@ -4,6 +4,7 @@ import java.io.{BufferedReader, FileReader}
 
 import backend.{Backend, BackendFactory}
 import frontend.{FrontendFactory, Parser, Source}
+import intermediate.symtabimpl.SymTabKeyImpl
 import intermediate.{ICode, SymTabStack}
 import pascal.listeners.{BackendMessageListener, ParserMessageListener, SourceMessageListener}
 import util.{CrossReferencer, ParseTreePrinter}
@@ -16,7 +17,6 @@ class Pascal(operation: String, filePath: String, flags: String) {
   private var parser: Parser = _
   private var source: Source = _
   private var iCode: ICode = _
-  //private var symTab: SymTab = _ // TODO: Remove it altogether?
   private var backend: Backend = _
 
   private var symTabStack: SymTabStack = _
@@ -37,21 +37,23 @@ class Pascal(operation: String, filePath: String, flags: String) {
     parser.parse()
     source.close()
 
-    iCode = parser.getICode
-    //symTab = parser.getSymTab // TODO: Remove it altogether?
-    symTabStack = Parser.symTabStack
+    if (parser.getErrorCount == 0) {
+      symTabStack = Parser.symTabStack
+      val programId = symTabStack.getProgramId()
+      iCode = programId.getAttribute(SymTabKeyImpl.ROUTINE_ICODE).asInstanceOf[ICode]
 
-    if (xref) { // Print the symbol table
-      val crossReferencer = new CrossReferencer
-      crossReferencer.print(symTabStack)
+      if (xref) { // Print the symbol table
+        val crossReferencer = new CrossReferencer
+        crossReferencer.print(symTabStack)
+      }
+
+      if (intermediate) { // Print AST
+        val treePrinter = new ParseTreePrinter(System.out)
+        treePrinter.print(iCode)
+      }
+
+      backend.process(iCode, symTabStack)
     }
-
-    if (intermediate) { // Print AST
-      val treePrinter = new ParseTreePrinter(System.out)
-      treePrinter.print(iCode)
-    }
-
-    backend.process(iCode, symTabStack)
   } catch {
     case e: Exception => println("*****Internal translator error. *****")
       e.printStackTrace()

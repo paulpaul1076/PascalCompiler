@@ -49,4 +49,12 @@ trait SymTabEntry {
     * @return the list of source line numbers.
     */
   def getLineNumbers: util.ArrayList[Int]
+
+  def setDefinition(definition: Definition): Unit
+
+  def getDefinition: Definition
+
+  def setTypeSpec(typeSpec: TypeSpec): Unit
+
+  def getTypeSpec: TypeSpec
 }
