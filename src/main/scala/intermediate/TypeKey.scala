@@ -1,0 +1,3 @@
+package intermediate
+
+trait TypeKey

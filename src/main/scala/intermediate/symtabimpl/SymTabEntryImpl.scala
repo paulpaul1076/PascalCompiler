@@ -2,7 +2,7 @@ package intermediate.symtabimpl
 
 import java.util
 
-import intermediate.{SymTab, SymTabEntry, SymTabKey}
+import intermediate._
 
 /**
   * Implementation of the SymTabEntry interface.
@@ -13,6 +13,21 @@ import intermediate.{SymTab, SymTabEntry, SymTabKey}
 class SymTabEntryImpl(val name: String, val symTab: SymTab) extends util.HashMap[SymTabKey, Any] with SymTabEntry {
 
   private val lineNumbers = new util.ArrayList[Int]()
+  private var definition: Definition = _
+  private var typeSpec: TypeSpec = _
+
+  override def equals(o: Any): Boolean = {
+    if (o.getClass == classOf[SymTabEntryImpl]) {
+      val other = o.asInstanceOf[SymTabEntryImpl]
+      this.name == other.name
+    } else {
+      false
+    }
+  }
+
+  override def hashCode(): Int = {
+    name.hashCode()
+  }
 
   /**
     * Getter.
@@ -69,4 +84,27 @@ class SymTabEntryImpl(val name: String, val symTab: SymTab) extends util.HashMap
   override def getLineNumbers: util.ArrayList[Int] = {
     lineNumbers
   }
+
+  /**
+    * Getter.
+    *
+    * @return definition of the entry.
+    */
+  override def getDefinition: Definition = definition
+
+  override def setDefinition(definition: Definition): Unit = this.definition = definition
+
+  /**
+    * Getter.
+    *
+    * @return type spec.
+    */
+  override def getTypeSpec: TypeSpec = typeSpec
+
+  /**
+    * Setter.
+    *
+    * @param typeSpec type spec.
+    */
+  override def setTypeSpec(typeSpec: TypeSpec): Unit = this.typeSpec = typeSpec
 }

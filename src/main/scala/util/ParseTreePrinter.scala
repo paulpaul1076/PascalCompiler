@@ -4,7 +4,10 @@ import java.io.PrintStream
 import java.util
 
 import intermediate.icodeimpl.ICodeNodeImpl
-import intermediate.{ICode, ICodeNode, SymTabEntry}
+import intermediate.symtabimpl.SymTabKeyImpl
+import intermediate.{ICode, ICodeNode, SymTabEntry, SymTabStack}
+
+import scala.collection.JavaConverters._
 
 /**
   * ParseTreePrinter.
@@ -13,7 +16,7 @@ class ParseTreePrinter(val ps: PrintStream) {
   private var length: Int = 0
   private var indent: String = ""
   private var indentation: String = ""
-  private var line: StringBuilder = new StringBuilder
+  private val line: StringBuilder = new StringBuilder
 
   /**
     * Constructor stuff.
@@ -116,24 +119,15 @@ class ParseTreePrinter(val ps: PrintStream) {
   }
 
   /**
-    * Print attribute.
+    * Print the intermediate code as a parse tree.
     *
-    * @param keyString key as string.
-    * @param value     value.
+    * @param symTabStack the symbol table stack.
     */
-  private def printAttribute(keyString: String, value: Any): Unit = {
-    val isSymTabEntry = value.isInstanceOf[SymTabEntry]
-    val valueString = if (isSymTabEntry) value.asInstanceOf[SymTabEntry].getName else value.toString
+  def print(symTabStack: SymTabStack): Unit = {
+    ps.println("\n===== INTERMEDIATE CODE =====")
 
-    val text = keyString.toLowerCase + "=\"" + valueString + "\""
-    append(" ")
-    append(text)
-
-    // Include an indentifier's nesting level.
-    if (isSymTabEntry) {
-      val level = value.asInstanceOf[SymTabEntry].getSymTab.getNestingLevel
-      printAttribute("LEVEL", level)
-    }
+    val programId = symTabStack.getProgramId()
+    printRoutine(programId)
   }
 
   private def printTypeSpec(impl: ICodeNodeImpl): Unit = {
@@ -154,6 +148,46 @@ class ParseTreePrinter(val ps: PrintStream) {
     })
 
     indentation = saveIndentation
+  }
+
+  /**
+    * Print attribute.
+    *
+    * @param keyString key as string.
+    * @param value     value.
+    */
+  private def printAttribute(keyString: String, value: Any): Unit = {
+    val isSymTabEntry = value.isInstanceOf[SymTabEntry]
+    val valueString = if (isSymTabEntry) value.asInstanceOf[SymTabEntry].getName else value.toString
+
+    val text = keyString.toLowerCase + "=\"" + valueString + "\""
+    append(" ")
+    append(text)
+
+    // Include an identifier's nesting level.
+    if (isSymTabEntry) {
+      val level = value.asInstanceOf[SymTabEntry].getSymTab.getNestingLevel
+      printAttribute("LEVEL", level)
+    }
+  }
+
+  private def printRoutine(routineId: SymTabEntry): Unit = {
+    val definition = routineId.getDefinition
+    println(s"\n*** ${definition.toString} ${routineId.getName} ***\n")
+
+    // Print the intermediate code in the routine's symbol table entry.
+    val iCode = routineId.getAttribute(SymTabKeyImpl.ROUTINE_ICODE).asInstanceOf[ICode]
+    if (iCode.getRoot != null) {
+      printNode(iCode.getRoot.asInstanceOf[ICodeNodeImpl])
+    }
+
+    // Print any procedures and functions defined in the routine.
+    val routineIds = routineId.getAttribute(SymTabKeyImpl.ROUTINE_ROUTINES).asInstanceOf[util.ArrayList[SymTabEntry]]
+    if (routineIds != null) {
+      for (rtnId: SymTabEntry <- routineIds.asScala) {
+        printRoutine(rtnId)
+      }
+    }
   }
 
   /**
