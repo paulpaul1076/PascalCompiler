@@ -22,7 +22,7 @@ class EnumerationTypeParser(parent: PascalParserTD) extends PascalParserTD(paren
       parseEnumerationIdentifier(curToken, value, enumerationType, constants)
 
       curToken = currentToken()
-      var tokenType = curToken.getTokenType
+      val tokenType = curToken.getTokenType
 
       // Look for the comma.
       if (tokenType == PascalTokenType.COMMA) {

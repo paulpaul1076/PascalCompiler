@@ -2,9 +2,11 @@ package frontend.pascal.parsers
 
 import java.util
 
+import frontend.Token
 import frontend.pascal.{PascalErrorCode, PascalParserTD, PascalTokenType}
-import frontend.{Parser, Token}
-import intermediate.icodeimpl.{ICodeKeyImpl, ICodeNodeTypeImpl}
+import intermediate.icodeimpl.ICodeNodeTypeImpl
+import intermediate.symtabimpl.Predefined
+import intermediate.typeimpl.TypeChecker
 import intermediate.{ICodeFactory, ICodeNode}
 
 /**
@@ -23,22 +25,14 @@ class AssignmentStatementParser(pascalParser: PascalParserTD) extends StatementP
     // Create an ASSIGN node.
     val assignNode = ICodeFactory.createICodeNode(ICodeNodeTypeImpl.ASSIGN)
     var curToken = toket
-    // Look up the target identifier in the symbol table stack.
-    // Enter the identifier into the table if it's not found.
-    val targetName = curToken.getText.toLowerCase
-    var targetId = Parser.symTabStack.lookup(targetName)
-    if (targetId == null) {
-      targetId = Parser.symTabStack.enterLocal(targetName)
-    }
-    targetId.appendLineNumber(curToken.getLineNumber)
-    curToken = nextToken() // consume the identifier token
 
-    // Create the variable node and set its name attribute.
-    val variableNode = ICodeFactory.createICodeNode(ICodeNodeTypeImpl.VARIABLE)
-    variableNode.setAttribute(ICodeKeyImpl.ID, targetId)
+    //Parse the target variable.
+    val variableParser = new VariableParser(this)
+    val targetNode = variableParser.parse(curToken)
+    val targetType = if (targetNode != null) targetNode.getTypeSpec else Predefined.undefinedType
 
     // The ASSIGN node adopts the variable node as its first child.
-    assignNode.addChild(variableNode)
+    assignNode.addChild(targetNode)
 
     //Synchronize on the := token.
     curToken = synchronize(AssignmentStatementParser.COLON_EQUALS_SET)
@@ -53,7 +47,15 @@ class AssignmentStatementParser(pascalParser: PascalParserTD) extends StatementP
     // Parse the expression. The ASSIGN node adopts the expression's
     // node as its second child.
     val expressionParser = new ExpressionParser(this)
-    assignNode.addChild(expressionParser.parse(curToken))
+    val exprNode = expressionParser.parse(curToken)
+    assignNode.addChild(exprNode)
+
+    // Type check: Assignment compatible?
+    val exprType = if (exprNode != null) exprNode.getTypeSpec else Predefined.undefinedType
+    if (!TypeChecker.areAssignmentCompatible(targetType, exprType)) {
+      PascalParserTD.errorHandler.flag(curToken, PascalErrorCode.INCOMPATIBLE_TYPES, this)
+    }
+    assignNode.setTypeSpec(targetType)
 
     assignNode
   }

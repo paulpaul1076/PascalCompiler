@@ -2,23 +2,25 @@ package frontend.pascal.parsers
 
 import java.util
 
-import frontend.{Parser, Token}
+import frontend.Token
 import frontend.pascal.{PascalErrorCode, PascalParserTD, PascalTokenType}
 import intermediate.icodeimpl.ICodeNodeTypeImpl
+import intermediate.symtabimpl.Predefined
+import intermediate.typeimpl.TypeChecker
 import intermediate.{ICodeFactory, ICodeNode}
 
 /**
- * While statement parser.
- *
- * @param pascalParserTD parent parser.
- */
+  * While statement parser.
+  *
+  * @param pascalParserTD parent parser.
+  */
 class WhileStatementParser(pascalParserTD: PascalParserTD) extends StatementParser(pascalParserTD) {
   /**
-   * Parse a while statement.
-   *
-   * @param toket current token.
-   * @return the root of the generated parse tree.
-   */
+    * Parse a while statement.
+    *
+    * @param toket current token.
+    * @return the root of the generated parse tree.
+    */
   override def parse(toket: Token): ICodeNode = {
     var curToken = nextToken()
 
@@ -35,7 +37,15 @@ class WhileStatementParser(pascalParserTD: PascalParserTD) extends StatementPars
     // Parse the expression.
     // The NOT node adopts the expression subtree as its only child.
     val expressionParser = new ExpressionParser(this)
-    notNode.addChild(expressionParser.parse(curToken))
+    val exprNode = expressionParser.parse(curToken)
+    notNode.addChild(exprNode)
+
+    // Type check: The test expression must be boolean.
+    val exprType = if (exprNode != null) exprNode.getTypeSpec else Predefined.undefinedType
+
+    if (!TypeChecker.isBoolean(exprType)) {
+      PascalParserTD.errorHandler.flag(curToken, PascalErrorCode.INCOMPATIBLE_TYPES, this)
+    }
 
     // Synchronize at the DO.
     curToken = synchronize(WhileStatementParser.DO_SET)
@@ -55,8 +65,8 @@ class WhileStatementParser(pascalParserTD: PascalParserTD) extends StatementPars
 }
 
 /**
- * Synchronization set for DO.
- */
+  * Synchronization set for DO.
+  */
 object WhileStatementParser {
   val DO_SET = StatementParser.STMT_START_SET.clone().asInstanceOf[util.HashSet[PascalTokenType]]
   DO_SET.add(PascalTokenType.DO)

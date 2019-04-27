@@ -5,6 +5,8 @@ import java.util
 import frontend.Token
 import frontend.pascal.{PascalErrorCode, PascalParserTD, PascalTokenType}
 import intermediate.icodeimpl.ICodeNodeTypeImpl
+import intermediate.symtabimpl.Predefined
+import intermediate.typeimpl.TypeChecker
 import intermediate.{ICodeFactory, ICodeNode}
 
 /**
@@ -26,10 +28,18 @@ class IfStatementParser(pascalParserTD: PascalParserTD) extends StatementParser(
     // Create an IF node.
     val ifNode = ICodeFactory.createICodeNode(ICodeNodeTypeImpl.IF)
 
-    // Parse an IF node.
+    // Parse the expression.
     // The IF node adopts the expression subtree as its first child
     val expressionParser = new ExpressionParser(this)
-    ifNode.addChild(expressionParser.parse(curToken))
+    val exprNode = expressionParser.parse(curToken)
+    ifNode.addChild(exprNode)
+
+    // Type check: The expression type must be boolean.
+    val exprType = if (exprNode != null) exprNode.getTypeSpec else Predefined.undefinedType
+
+    if (!TypeChecker.isBoolean(exprType)) {
+      PascalParserTD.errorHandler.flag(curToken, PascalErrorCode.INCOMPATIBLE_TYPES, this)
+    }
 
     // Synchronize at the THEN.
     curToken = synchronize(IfStatementParser.THEN_SET)

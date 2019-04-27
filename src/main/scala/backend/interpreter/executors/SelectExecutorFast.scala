@@ -4,7 +4,7 @@ import java.util
 
 import backend.interpreter.Executor
 import intermediate.ICodeNode
-import intermediate.icodeimpl.ICodeKeyImpl
+import intermediate.icodeimpl.{ICodeKeyImpl, ICodeNodeTypeImpl}
 
 import scala.collection.JavaConversions._
 
@@ -62,8 +62,16 @@ class SelectExecutorFast(parent: Executor) extends StatementExecutor(parent) {
     for (i <- 1 until selectChildren.size()) {
       val child = selectChildren.get(i)
       val constants = child.getChildren.get(0).getChildren
-      for (value: ICodeNode <- constants) {
-        jumpTable.put(value.getAttribute(ICodeKeyImpl.VALUE), child.getChildren.get(1))
+      for (constantNode: ICodeNode <- constants) {
+        var value = constantNode.getAttribute(ICodeKeyImpl.VALUE)
+        if (constantNode.getType == ICodeNodeTypeImpl.STRING_CONSTANT) {
+          /**
+            * This won't throw exceptions, because when we parse case statements, we make sure that
+            * we have only ints, enums and 1 character strings. So, there can't be 0 character strings here.
+            */
+          value = value.asInstanceOf[String].charAt(0)
+        }
+        jumpTable.put(value, child.getChildren.get(1))
       }
     }
     jumpTable

@@ -130,8 +130,35 @@ class ParseTreePrinter(val ps: PrintStream) {
     printRoutine(programId)
   }
 
-  private def printTypeSpec(impl: ICodeNodeImpl): Unit = {
+  /**
+    * Print a parse tree's node type specification.
+    *
+    * @param node the parse tree node.
+    */
+  private def printTypeSpec(node: ICodeNodeImpl): Unit = {
+    val typeSpec = node.getTypeSpec
 
+    if (typeSpec != null) {
+      val saveMargin = indentation
+      indentation += indent
+
+      var typeName: String = null
+      val typeId = typeSpec.getIdentifier
+
+      // Named type: Print the type identifier's name.
+      if (typeId != null) {
+        typeName = typeId.getName
+      }
+
+      // Unnamed type: Print an artificial type identifier name.
+      else {
+        val code = typeSpec.hashCode() + typeSpec.getForm.hashCode()
+        typeName = "$anon_" + Integer.toHexString(code)
+      }
+
+      printAttribute("TYPE_ID", typeName)
+      indentation = saveMargin
+    }
   }
 
   /**
@@ -204,5 +231,4 @@ class ParseTreePrinter(val ps: PrintStream) {
       */
     val LINE_WIDTH = 80
   }
-
 }
