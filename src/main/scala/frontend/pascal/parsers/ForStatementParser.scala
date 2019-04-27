@@ -5,6 +5,8 @@ import java.util
 import frontend.Token
 import frontend.pascal.{PascalErrorCode, PascalParserTD, PascalTokenType}
 import intermediate.icodeimpl.{ICodeKeyImpl, ICodeNodeTypeImpl}
+import intermediate.symtabimpl.Predefined
+import intermediate.typeimpl.{TypeChecker, TypeFormImpl}
 import intermediate.{ICodeFactory, ICodeNode}
 
 /**
@@ -32,9 +34,16 @@ class ForStatementParser(pascalParserTD: PascalParserTD) extends StatementParser
     // Parse the embedded initial assignment.
     val assignmentStatementParser = new AssignmentStatementParser(this)
     val initAssignNode = assignmentStatementParser.parse(curToken)
+    val controlType = if (initAssignNode != null) initAssignNode.getTypeSpec else Predefined.undefinedType
 
     // Set the current line number attribute.
     setLineNumber(initAssignNode, targetToken) // TODO: why is targetToken the same in the next setLine function call?
+
+    // Type check: The control variable's type must be integer
+    // or enumeration.
+    if (!TypeChecker.isInteger(controlType) && controlType.getForm != TypeFormImpl.ENUMERATION) {
+      PascalParserTD.errorHandler.flag(curToken, PascalErrorCode.INCOMPATIBLE_TYPES, this)
+    }
 
     // The COMPOUND node adopts the initial ASSIGN and the LOOP nodes
     // as its first and second children.
@@ -55,6 +64,7 @@ class ForStatementParser(pascalParserTD: PascalParserTD) extends StatementParser
 
     // Create a relationship operator node: GT for TO, or LT for DOWNTO.
     val relOpNode = ICodeFactory.createICodeNode(if (direction == PascalTokenType.TO) ICodeNodeTypeImpl.GT else ICodeNodeTypeImpl.LT)
+    relOpNode.setTypeSpec(Predefined.booleanType)
 
     // Copy the control VARIABLE node. The relational operator
     //node adopts the copied VARIABLE node as its first child.
@@ -64,7 +74,16 @@ class ForStatementParser(pascalParserTD: PascalParserTD) extends StatementParser
     // Parse the termination expression. The relational operator node
     // adopts the expression as its second child.
     val expressionParser = new ExpressionParser(this)
-    relOpNode.addChild(expressionParser.parse(curToken))
+    val exprNode = expressionParser.parse(curToken)
+    relOpNode.addChild(exprNode)
+
+    // Type check: The termination expression type must be assignment
+    // compatible with the control variable's type.
+    val exprType = if (exprNode != null) exprNode.getTypeSpec else Predefined.undefinedType
+
+    if (!TypeChecker.areAssignmentCompatible(controlType, exprType)) {
+      PascalParserTD.errorHandler.flag(curToken, PascalErrorCode.INCOMPATIBLE_TYPES, this)
+    }
 
     // The TEST node adopts the relational operator node as its only child.
     // The LOOP node adopts the TEST node as its first child.
@@ -87,6 +106,7 @@ class ForStatementParser(pascalParserTD: PascalParserTD) extends StatementParser
     // Create an assignment with a copy of the control variable
     // to advance the value of the variable.
     val nextAssignNode = ICodeFactory.createICodeNode(ICodeNodeTypeImpl.ASSIGN)
+    nextAssignNode.setTypeSpec(controlType)
     nextAssignNode.addChild(controlVarNode.copy())
 
     // Create the arithmetic operator node:
@@ -98,6 +118,7 @@ class ForStatementParser(pascalParserTD: PascalParserTD) extends StatementParser
     arithOpNode.addChild(controlVarNode.copy())
     val oneNode = ICodeFactory.createICodeNode(ICodeNodeTypeImpl.INTEGER_CONSTANT)
     oneNode.setAttribute(ICodeKeyImpl.VALUE, 1)
+    oneNode.setTypeSpec(Predefined.integerType)
     arithOpNode.addChild(oneNode)
 
     // The next ASSIGN node adopts the arithmetic operator node as its

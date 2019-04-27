@@ -2,7 +2,7 @@ package intermediate.icodeimpl
 
 import java.util
 
-import intermediate.{ICodeFactory, ICodeKey, ICodeNode, ICodeNodeType}
+import intermediate._
 
 /**
   * Implementation of ICodeNode.
@@ -20,6 +20,8 @@ class ICodeNodeImpl(private val nodeType: ICodeNodeType) extends util.HashMap[IC
     * Children array list.
     */
   private var children: util.ArrayList[ICodeNode] = new util.ArrayList[ICodeNode]()
+
+  private var typeSpec: TypeSpec = _
 
   /**
     * Getter.
@@ -93,4 +95,12 @@ class ICodeNodeImpl(private val nodeType: ICodeNodeType) extends util.HashMap[IC
     * @return string representation.
     */
   override def toString: String = nodeType.toString
+
+  override def getTypeSpec: TypeSpec = {
+    typeSpec
+  }
+
+  override def setTypeSpec(typeSpec: TypeSpec): Unit = {
+    this.typeSpec = typeSpec
+  }
 }

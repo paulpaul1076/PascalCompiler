@@ -58,4 +58,8 @@ trait ICodeNode {
     * @return the copy.
     */
   def copy(): ICodeNode
+
+  def setTypeSpec(typeSpec: TypeSpec): Unit
+
+  def getTypeSpec: TypeSpec
 }

@@ -17,6 +17,7 @@ class SymTabEntryImpl(val name: String, val symTab: SymTab) extends util.HashMap
   private var typeSpec: TypeSpec = _
 
   override def equals(o: Any): Boolean = {
+    if (o == null) return false
     if (o.getClass == classOf[SymTabEntryImpl]) {
       val other = o.asInstanceOf[SymTabEntryImpl]
       this.name == other.name

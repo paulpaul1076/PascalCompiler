@@ -15,6 +15,7 @@ class TypeSpecImpl private(val form: TypeForm, var identifier: SymTabEntry) exte
 
   // Had to define this, because comparing newed objects with each other would always return "true".
   override def equals(o: Any): Boolean = {
+    if (o == null) return false
     if (o.getClass == classOf[TypeSpecImpl]) {
       val other = o.asInstanceOf[TypeSpecImpl]
       this.form == other.form && this.identifier == other.identifier
@@ -23,8 +24,13 @@ class TypeSpecImpl private(val form: TypeForm, var identifier: SymTabEntry) exte
     }
   }
 
+  // random shit, because scala doesn't have java's enums
   override def hashCode(): Int = {
-    form.hashCode() ^ identifier.hashCode()
+    if (identifier == null) {
+      form.hashCode()
+    } else {
+      form.hashCode() ^ identifier.hashCode()
+    }
   }
 
   /**
@@ -33,7 +39,7 @@ class TypeSpecImpl private(val form: TypeForm, var identifier: SymTabEntry) exte
     * @param value the type form.
     */
   def this(value: String) {
-    this(TypeFormImpl.ARRAY)
+    this(TypeFormImpl.ARRAY, null)
 
     val indexType = new TypeSpecImpl(TypeFormImpl.SUBRANGE)
 

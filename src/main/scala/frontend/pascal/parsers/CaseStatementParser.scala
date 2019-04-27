@@ -3,23 +3,25 @@ package frontend.pascal.parsers
 import java.util
 
 import frontend.pascal.{PascalErrorCode, PascalParserTD, PascalTokenType}
-import frontend.{EofToken, Token, TokenType}
+import frontend.{EofToken, Parser, Token, TokenType}
 import intermediate.icodeimpl.{ICodeKeyImpl, ICodeNodeTypeImpl}
-import intermediate.{ICodeFactory, ICodeNode}
+import intermediate.symtabimpl.{DefinitionImpl, Predefined, SymTabKeyImpl}
+import intermediate.typeimpl.{TypeChecker, TypeFormImpl}
+import intermediate.{ICodeFactory, ICodeNode, TypeSpec}
 
 /**
- * CaseStatementParser.
- *
- * @param pascalParserTD parent parser.
- */
+  * CaseStatementParser.
+  *
+  * @param pascalParserTD parent parser.
+  */
 class CaseStatementParser(pascalParserTD: PascalParserTD) extends StatementParser(pascalParserTD) {
 
   /**
-   * Parse a case statement.
-   *
-   * @param toket starting token.
-   * @return the root of the generated parse tree.
-   */
+    * Parse a case statement.
+    *
+    * @param toket starting token.
+    * @return the root of the generated parse tree.
+    */
   override def parse(toket: Token): ICodeNode = {
     var curToken = nextToken() // consume the CASE
 
@@ -29,12 +31,21 @@ class CaseStatementParser(pascalParserTD: PascalParserTD) extends StatementParse
     // Parse the CASE expression.
     // The SELECT node adopts the expression subtree as its first child.
     val expressionParser = new ExpressionParser(this)
-    selectNode.addChild(expressionParser.parse(curToken))
+    val exprNode = expressionParser.parse(curToken)
+    selectNode.addChild(exprNode)
+
+    // Type check: The CASE expression's type must be integer, character, or enumeration.
+    val exprType = if (exprNode != null) exprNode.getTypeSpec else Predefined.undefinedType
+    if (!TypeChecker.isInteger(exprType) &&
+      !TypeChecker.isChar(exprType) &&
+      exprType.getForm != TypeFormImpl.ENUMERATION) {
+      PascalParserTD.errorHandler.flag(curToken, PascalErrorCode.INCOMPATIBLE_TYPES, this)
+    }
 
     // Synchronize at the OF.
     curToken = synchronize(CaseStatementParser.OF_SET)
     if (curToken.getTokenType == PascalTokenType.OF) {
-      curToken = nextToken()
+      curToken = nextToken() // consume the OF
     } else {
       PascalParserTD.errorHandler.flag(curToken, PascalErrorCode.MISSING_OF, this)
     }
@@ -46,7 +57,7 @@ class CaseStatementParser(pascalParserTD: PascalParserTD) extends StatementParse
     // or the end of the source file.
     while (!curToken.isInstanceOf[EofToken] && (curToken.getTokenType != PascalTokenType.END)) {
       // The SELECT node adopts the CASE branch subtree.
-      selectNode.addChild(parseBranch(curToken, constantSet))
+      selectNode.addChild(parseBranch(curToken, exprType, constantSet))
 
       curToken = currentToken()
       val tokenType = curToken.getTokenType
@@ -72,7 +83,7 @@ class CaseStatementParser(pascalParserTD: PascalParserTD) extends StatementParse
     selectNode
   }
 
-  private def parseBranch(toket: Token, constantSet: util.HashSet[Any]): ICodeNode = {
+  private def parseBranch(toket: Token, expressionType: TypeSpec, constantSet: util.HashSet[Any]): ICodeNode = {
     var curToken = toket
     // Create a SELECT_BRANCH node and a SELECT_CONSTANTS node.
     // The SELECT_BRANCH node adopts the SELECT_CONSTANTS node as its first child.
@@ -83,7 +94,7 @@ class CaseStatementParser(pascalParserTD: PascalParserTD) extends StatementParse
 
     // Parse the list of CASE branch constants.
     // The SELECT_CONSTANTS node adopts each constant.
-    parseConstantList(curToken, constantsNode, constantSet)
+    parseConstantList(curToken, expressionType, constantsNode, constantSet)
 
     // Look for the : token.
     curToken = currentToken()
@@ -101,12 +112,12 @@ class CaseStatementParser(pascalParserTD: PascalParserTD) extends StatementParse
     branchNode
   }
 
-  private def parseConstantList(toket: Token, constantsNode: ICodeNode, constantSet: util.HashSet[Any]): Unit = {
+  private def parseConstantList(toket: Token, expressionType: TypeSpec, constantsNode: ICodeNode, constantSet: util.HashSet[Any]): Unit = {
     var curToken = toket
     // Loop to parse each constant.
     while (CaseStatementParser.CONSTANT_START_SET.contains(curToken.getTokenType)) {
       // The constants list node adopts the constant node.
-      constantsNode.addChild(parseConstant(curToken, constantSet))
+      constantsNode.addChild(parseConstant(curToken, expressionType, constantSet))
 
       //Synchronize at the comma between constants.
       curToken = synchronize(CaseStatementParser.COMMA_SET)
@@ -123,7 +134,7 @@ class CaseStatementParser(pascalParserTD: PascalParserTD) extends StatementParse
     }
   }
 
-  private def parseConstant(token: Token, constantSet: util.HashSet[Any]): ICodeNode = {
+  private def parseConstant(token: Token, expressionType: TypeSpec, constantSet: util.HashSet[Any]): ICodeNode = {
     var sign: TokenType = null
     var constantNode: ICodeNode = null
 
@@ -138,11 +149,20 @@ class CaseStatementParser(pascalParserTD: PascalParserTD) extends StatementParse
     }
 
     // Parse the constant.
+    var constantType: TypeSpec = null
     curToken.getTokenType.asInstanceOf[PascalTokenType] match {
-      case PascalTokenType.IDENTIFIER => constantNode = parseIdentifierConstant(curToken, sign)
-      case PascalTokenType.INTEGER    => constantNode = parseIntegerConstant(curToken.getText, sign)
-      case PascalTokenType.STRING     => constantNode = parseCharacterConstant(curToken, curToken.getValue.asInstanceOf[String], sign)
-      case _                          => PascalParserTD.errorHandler.flag(curToken, PascalErrorCode.INVALID_CONSTANT, this)
+      case PascalTokenType.IDENTIFIER =>
+        constantNode = parseIdentifierConstant(curToken, sign)
+        if (constantNode != null) {
+          constantType = constantNode.getTypeSpec
+        }
+      case PascalTokenType.INTEGER =>
+        constantNode = parseIntegerConstant(curToken.getText, sign)
+        constantType = Predefined.integerType
+      case PascalTokenType.STRING =>
+        constantNode = parseCharacterConstant(curToken, curToken.getValue.asInstanceOf[String], sign)
+        constantType = Predefined.charType
+      case _ => PascalParserTD.errorHandler.flag(curToken, PascalErrorCode.INVALID_CONSTANT, this)
     }
 
     // Check for reused constants.
@@ -156,14 +176,54 @@ class CaseStatementParser(pascalParserTD: PascalParserTD) extends StatementParse
       }
     }
 
+    // Type check: The constant type must be comparison compatible
+    // with the CASE expression type.
+
+    if (!TypeChecker.areComparisonCompatible(expressionType, constantType)) {
+      PascalParserTD.errorHandler.flag(curToken, PascalErrorCode.INCOMPATIBLE_TYPES, this)
+    }
+
     nextToken() // consume the constant
+    constantNode.setTypeSpec(constantType)
     constantNode
   }
 
-  private def parseIdentifierConstant(token: Token, tokenType: TokenType): ICodeNode = {
-    // Placeholder: don't allow for now.
-    PascalParserTD.errorHandler.flag(token, PascalErrorCode.INVALID_CONSTANT, this)
-    null
+  private def parseIdentifierConstant(toket: Token, sign: TokenType): ICodeNode = {
+    var constantNode: ICodeNode = null
+    var constantType: TypeSpec = null
+
+    // Look up the identifier in the symbol table stack.
+    val name = toket.getText.toLowerCase
+    var id = Parser.symTabStack.lookup(name)
+
+    // Undefined.
+    if (id == null) {
+      id = Parser.symTabStack.enterLocal(name)
+      id.setDefinition(DefinitionImpl.UNDEFINED)
+      id.setTypeSpec(Predefined.undefinedType)
+      PascalParserTD.errorHandler.flag(toket, PascalErrorCode.IDENTIFIER_UNDEFINED, this)
+      return null
+    }
+    val defnCode = id.getDefinition
+
+    // Constant identifier.
+    if (defnCode == DefinitionImpl.CONSTANT || defnCode == DefinitionImpl.ENUMERATION_CONSTANT) {
+      val constantValue = id.getAttribute(SymTabKeyImpl.CONSTANT_VALUE)
+      constantType = id.getTypeSpec
+
+      // Type check: Leading sign permitted only for integer constants.
+      if (sign != null && !TypeChecker.isInteger(constantType)) {
+        PascalParserTD.errorHandler.flag(toket, PascalErrorCode.INVALID_CONSTANT, this)
+      }
+
+      constantNode = ICodeFactory.createICodeNode(ICodeNodeTypeImpl.INTEGER_CONSTANT)
+      constantNode.setAttribute(ICodeKeyImpl.VALUE, constantValue)
+    }
+    id.appendLineNumber(toket.getLineNumber)
+    if (constantNode != null) {
+      constantNode.setTypeSpec(constantType)
+    }
+    constantNode
   }
 
   private def parseIntegerConstant(value: String, sign: TokenType): ICodeNode = {
@@ -198,8 +258,8 @@ class CaseStatementParser(pascalParserTD: PascalParserTD) extends StatementParse
 
 
 /**
- * Companion object for this class.
- */
+  * Companion object for this class.
+  */
 object CaseStatementParser {
   // Synchronization set for starting a CASE option constant.
   val CONSTANT_START_SET = new util.HashSet[PascalTokenType]()

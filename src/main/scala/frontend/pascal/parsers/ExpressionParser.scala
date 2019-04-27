@@ -5,7 +5,9 @@ import java.util
 import frontend.pascal.{PascalErrorCode, PascalParserTD, PascalTokenType}
 import frontend.{Parser, Token, TokenType}
 import intermediate.icodeimpl.{ICodeKeyImpl, ICodeNodeTypeImpl}
-import intermediate.{ICodeFactory, ICodeNode, ICodeNodeType}
+import intermediate.symtabimpl.{DefinitionImpl, Predefined, SymTabKeyImpl}
+import intermediate.typeimpl.TypeChecker
+import intermediate.{ICodeFactory, ICodeNode, ICodeNodeType, TypeFactory}
 
 
 // TODO: find out if this should be a subclass of StatementParser.
@@ -36,6 +38,8 @@ class ExpressionParser(pascalParser: PascalParserTD) extends StatementParser(pas
     var curToken = toket
     var rootNode = parseSimpleExpression(curToken)
 
+    var resultType = if (rootNode != null) rootNode.getTypeSpec else Predefined.undefinedType
+
     curToken = currentToken()
     val tokenType = curToken.getTokenType
 
@@ -52,11 +56,27 @@ class ExpressionParser(pascalParser: PascalParserTD) extends StatementParser(pas
 
       // Parse the second simple expression. The operator node adopts
       // the simple expression's tree as its second child.
-      opNode.addChild(parseSimpleExpression(curToken))
+      val simExprNode = parseSimpleExpression(curToken)
+      opNode.addChild(simExprNode)
 
       // The operator node becomes the new root node.
       rootNode = opNode
+
+      // Type check: The operands must be comparison compatible.
+      val simExprType = if (simExprNode != null) simExprNode.getTypeSpec else Predefined.undefinedType
+
+      if (TypeChecker.areComparisonCompatible(resultType, simExprType)) {
+        resultType = Predefined.booleanType
+      } else {
+        PascalParserTD.errorHandler.flag(curToken, PascalErrorCode.INCOMPATIBLE_TYPES, this)
+        resultType = Predefined.undefinedType
+      }
     }
+
+    if (rootNode != null) {
+      rootNode.setTypeSpec(resultType)
+    }
+
     rootNode
   }
 
@@ -69,15 +89,23 @@ class ExpressionParser(pascalParser: PascalParserTD) extends StatementParser(pas
   private def parseSimpleExpression(toket: Token): ICodeNode = {
     var signType: TokenType = null // type of leading sign (if any)
     var curToken = toket
+    var signToken: Token = null
     // Look for a leading + or - sign.
     var tokenType = curToken.getTokenType
     if ((tokenType == PascalTokenType.PLUS) || (tokenType == PascalTokenType.MINUS)) {
       signType = tokenType
+      signToken = curToken
       curToken = nextToken() // consume the + or -
     }
 
     // Parse a term and make the root of its tree the root node.
     var rootNode = parseTerm(curToken)
+    var resultType = if (rootNode != null) rootNode.getTypeSpec else Predefined.undefinedType
+
+    // Type check : Leading sign.
+    if (signType != null && !TypeChecker.isIntegerOrReal(resultType)) {
+      PascalParserTD.errorHandler.flag(signToken, PascalErrorCode.INCOMPATIBLE_TYPES, this)
+    }
 
     // Was there a leading - sign?
     if (signType == PascalTokenType.MINUS) {
@@ -85,6 +113,7 @@ class ExpressionParser(pascalParser: PascalParserTD) extends StatementParser(pas
       // as its child. The NEGATE node becomes the new root node.
       val negateNode = ICodeFactory.createICodeNode(ICodeNodeTypeImpl.NEGATE)
       negateNode.addChild(rootNode)
+      negateNode.setTypeSpec(rootNode.getTypeSpec)
       rootNode = negateNode
     }
 
@@ -93,19 +122,47 @@ class ExpressionParser(pascalParser: PascalParserTD) extends StatementParser(pas
 
     // Loop over additive operators.
     while (ExpressionParser.ADD_OPS.contains(tokenType)) {
+      val operator = tokenType
       // Create a new operator node and adopt the current tree
       // as its first child
-      val nodeType = ExpressionParser.ADD_OPS_MAP.get(tokenType)
+      val nodeType = ExpressionParser.ADD_OPS_MAP.get(operator)
       val opNode = ICodeFactory.createICodeNode(nodeType)
       opNode.addChild(rootNode)
       curToken = nextToken() // consume the operator
 
       // Parse another term. The operator node adopts
       // the term's tree as its second child.
-      opNode.addChild(parseTerm(curToken))
+      val termNode = parseTerm(curToken)
+      opNode.addChild(termNode)
+      val termType = if (termNode != null) termNode.getTypeSpec else Predefined.undefinedType
 
       // The operator node becomes the new root node.
       rootNode = opNode
+
+      // Determine the result type.
+      operator.asInstanceOf[PascalTokenType] match {
+        case PascalTokenType.PLUS | PascalTokenType.MINUS =>
+          // Both operands integer ==> integer result
+          if (TypeChecker.areBothInteger(resultType, termType)) {
+            resultType = Predefined.integerType
+          }
+          // Both real operands or one real and one integer operand
+          // ==> real result.
+          else if (TypeChecker.isAtLeastOneReal(resultType, termType)) {
+            resultType = Predefined.realType
+          } else {
+            PascalParserTD.errorHandler.flag(curToken, PascalErrorCode.INCOMPATIBLE_TYPES, this)
+          }
+        case PascalTokenType.OR =>
+          // Both operands boolean ==> boolean result.
+          if (TypeChecker.areBothBoolean(resultType, termType)) {
+            resultType = Predefined.booleanType
+          } else {
+            PascalParserTD.errorHandler.flag(curToken, PascalErrorCode.INCOMPATIBLE_TYPES, this)
+          }
+      }
+
+      rootNode.setTypeSpec(resultType)
 
       curToken = currentToken()
       tokenType = curToken.getTokenType
@@ -123,15 +180,17 @@ class ExpressionParser(pascalParser: PascalParserTD) extends StatementParser(pas
   private def parseTerm(toket: Token): ICodeNode = {
     var curToken = toket
     var rootNode = parseFactor(curToken)
+    var resultType = if (rootNode != null) rootNode.getTypeSpec else Predefined.undefinedType
 
     curToken = currentToken()
     var tokenType = curToken.getTokenType
 
     // Loop over multiplicative operators.
     while (ExpressionParser.MULT_OPS.contains(tokenType)) {
+      val operator = tokenType
       // Create a new operator node and adopt the current tree
       // as its first child.
-      val nodeType = ExpressionParser.MULT_OPS_MAP.get(tokenType)
+      val nodeType = ExpressionParser.MULT_OPS_MAP.get(operator)
       val opNode = ICodeFactory.createICodeNode(nodeType)
 
       opNode.addChild(rootNode)
@@ -140,10 +199,54 @@ class ExpressionParser(pascalParser: PascalParserTD) extends StatementParser(pas
 
       // Parse another factor. The operator node adopts
       // the term's tree as its second child.
-      opNode.addChild(parseFactor(curToken))
+      val factorNode = parseFactor(curToken)
+      opNode.addChild(factorNode)
 
       // The operator node becomes the new root node.
       rootNode = opNode
+
+      curToken = currentToken()
+      tokenType = curToken.getTokenType
+
+      val factorType = if (factorNode != null) factorNode.getTypeSpec else Predefined.undefinedType
+
+      // Determine the result type.
+      operator.asInstanceOf[PascalTokenType] match {
+        case PascalTokenType.STAR =>
+          // Both operands integer ==> integer result.
+          if (TypeChecker.areBothInteger(resultType, factorType)) {
+            resultType = Predefined.integerType
+          } // Both real operands or one real and one integer operand. ==> real result
+          else if (TypeChecker.isAtLeastOneReal(resultType, factorType)) {
+            resultType = Predefined.realType
+          } else {
+            PascalParserTD.errorHandler.flag(curToken, PascalErrorCode.INCOMPATIBLE_TYPES, this)
+          }
+        case PascalTokenType.SLASH =>
+          // Al integer and real operand combinations
+          // ==> real result.
+          if (TypeChecker.areBothInteger(resultType, factorType) || TypeChecker.isAtLeastOneReal(resultType, factorType)) {
+            resultType = Predefined.realType
+          } else {
+            PascalParserTD.errorHandler.flag(curToken, PascalErrorCode.INCOMPATIBLE_TYPES, this)
+          }
+        case PascalTokenType.DIV | PascalTokenType.MOD =>
+          // Both operands integer ==> integer result.
+          if (TypeChecker.areBothInteger(resultType, factorType)) {
+            resultType = Predefined.integerType
+          } else {
+            PascalParserTD.errorHandler.flag(curToken, PascalErrorCode.INCOMPATIBLE_TYPES, this)
+          }
+        case PascalTokenType.AND =>
+          // Both operands boolean ==> boolean result.
+          if (TypeChecker.areBothBoolean(resultType, factorType)) {
+            resultType = Predefined.booleanType
+          } else {
+            PascalParserTD.errorHandler.flag(curToken, PascalErrorCode.INCOMPATIBLE_TYPES, this)
+          }
+      }
+
+      rootNode.setTypeSpec(resultType)
 
       curToken = currentToken()
       tokenType = curToken.getTokenType
@@ -165,32 +268,23 @@ class ExpressionParser(pascalParser: PascalParserTD) extends StatementParser(pas
 
     tokenType.asInstanceOf[PascalTokenType] match {
       case PascalTokenType.IDENTIFIER =>
-        // Look up the identifier in the symbol table stack.
-        // Flag the identifier as undefined if it's not found.
-        val name = curToken.getText.toLowerCase
-        var id = Parser.symTabStack.lookup(name)
-        if (id == null) {
-          PascalParserTD.errorHandler.flag(curToken, PascalErrorCode.IDENTIFIER_UNDEFINED, this)
-          id = Parser.symTabStack.enterLocal(name)
-        }
-
-        rootNode = ICodeFactory.createICodeNode(ICodeNodeTypeImpl.VARIABLE)
-        rootNode.setAttribute(ICodeKeyImpl.ID, id)
-        id.appendLineNumber(curToken.getLineNumber)
-
-        curToken = nextToken()
+        rootNode = parseIdentifier(curToken)
       case PascalTokenType.INTEGER =>
         // Create an INTEGER_CONSTANT node as the root node.
         rootNode = ICodeFactory.createICodeNode(ICodeNodeTypeImpl.INTEGER_CONSTANT)
         rootNode.setAttribute(ICodeKeyImpl.VALUE, curToken.getValue)
 
-        curToken = nextToken()
+        curToken = nextToken() // consume the number
+
+        rootNode.setTypeSpec(Predefined.integerType)
       case PascalTokenType.REAL =>
         // Create a REAL_CONSTANT node as the root node.
         rootNode = ICodeFactory.createICodeNode(ICodeNodeTypeImpl.REAL_CONSTANT)
         rootNode.setAttribute(ICodeKeyImpl.VALUE, curToken.getValue)
 
-        curToken = nextToken()
+        curToken = nextToken() // consume the number
+
+        rootNode.setTypeSpec(Predefined.realType)
       case PascalTokenType.STRING =>
         val value = curToken.getValue.asInstanceOf[String]
 
@@ -198,7 +292,11 @@ class ExpressionParser(pascalParser: PascalParserTD) extends StatementParser(pas
         rootNode = ICodeFactory.createICodeNode(ICodeNodeTypeImpl.STRING_CONSTANT)
         rootNode.setAttribute(ICodeKeyImpl.VALUE, value)
 
-        curToken = nextToken()
+        val resultType = if (value.length == 1) Predefined.charType else TypeFactory.createStringType(value)
+
+        curToken = nextToken() // consume the string
+
+        rootNode.setTypeSpec(resultType)
       case PascalTokenType.NOT =>
         curToken = nextToken() // consume the NOT
 
@@ -206,13 +304,23 @@ class ExpressionParser(pascalParser: PascalParserTD) extends StatementParser(pas
         rootNode = ICodeFactory.createICodeNode(ICodeNodeTypeImpl.NOT)
 
         // Parse the factor. The NOT node adopts the
-        // factory node as its child.
-        rootNode.addChild(parseFactor(curToken))
+        // factor node as its child.
+        val factorNode = parseFactor(curToken)
+        rootNode.addChild(factorNode)
+
+        // Type check: the factor must be boolean.
+        val factorType = if (factorNode != null) factorNode.getTypeSpec else Predefined.undefinedType
+        if (!TypeChecker.isBoolean(factorType)) {
+          PascalParserTD.errorHandler.flag(curToken, PascalErrorCode.INCOMPATIBLE_TYPES, this)
+        }
+
+        rootNode.setTypeSpec(Predefined.booleanType)
       case PascalTokenType.LEFT_PAREN =>
         curToken = nextToken() // consume the (
 
         // Parse an expression and make its node the root node.
         rootNode = parseExpression(curToken)
+        val resultType = if (rootNode != null) rootNode.getTypeSpec else Predefined.undefinedType // TODO: why is this useless crap here?
 
         // Look for the matching ) token.
         curToken = currentToken()
@@ -221,9 +329,69 @@ class ExpressionParser(pascalParser: PascalParserTD) extends StatementParser(pas
         } else {
           PascalParserTD.errorHandler.flag(curToken, PascalErrorCode.MISSING_RIGHT_PAREN, this)
         }
+
+        rootNode.setTypeSpec(resultType) // TODO: why is this useless crap here?
       case _ => PascalParserTD.errorHandler.flag(curToken, PascalErrorCode.UNEXPECTED_TOKEN, this)
     }
 
+    rootNode
+  }
+
+  private def parseIdentifier(toket: Token): ICodeNode = {
+    var rootNode: ICodeNode = null
+
+    var curToken = toket
+    // Look up the identifier in the symbol table stack.
+    val name = curToken.getText.toLowerCase
+    var id = Parser.symTabStack.lookup(name)
+
+    // Undefined.
+    if (id == null) {
+      PascalParserTD.errorHandler.flag(curToken, PascalErrorCode.IDENTIFIER_UNDEFINED, this)
+      id = Parser.symTabStack.enterLocal(name)
+      id.setDefinition(DefinitionImpl.UNDEFINED)
+      id.setTypeSpec(Predefined.undefinedType)
+    }
+
+    val defnCode = id.getDefinition
+
+    defnCode.asInstanceOf[DefinitionImpl] match {
+      case DefinitionImpl.CONSTANT =>
+        val value = id.getAttribute(SymTabKeyImpl.CONSTANT_VALUE)
+        val `type` = id.getTypeSpec
+
+        if (value.isInstanceOf[Int]) {
+          rootNode = ICodeFactory.createICodeNode(ICodeNodeTypeImpl.INTEGER_CONSTANT)
+          rootNode.setAttribute(ICodeKeyImpl.VALUE, value)
+        } else if (value.isInstanceOf[Float]) {
+          rootNode = ICodeFactory.createICodeNode(ICodeNodeTypeImpl.REAL_CONSTANT)
+          rootNode.setAttribute(ICodeKeyImpl.VALUE, value)
+        } else if (value.isInstanceOf[String]) {
+          rootNode = ICodeFactory.createICodeNode(ICodeNodeTypeImpl.STRING_CONSTANT)
+          rootNode.setAttribute(ICodeKeyImpl.VALUE, value)
+        }
+
+        id.appendLineNumber(curToken.getLineNumber)
+        curToken = nextToken() // consume the constant identifier
+
+        if (rootNode != null) {
+          rootNode.setTypeSpec(`type`)
+        }
+      case DefinitionImpl.ENUMERATION_CONSTANT =>
+        val value = id.getAttribute(SymTabKeyImpl.CONSTANT_VALUE)
+        val `type` = id.getTypeSpec
+
+        rootNode = ICodeFactory.createICodeNode(ICodeNodeTypeImpl.INTEGER_CONSTANT)
+        rootNode.setAttribute(ICodeKeyImpl.VALUE, value)
+
+        id.appendLineNumber(curToken.getLineNumber)
+        curToken = nextToken() // consume the enum constant identifier
+
+        rootNode.setTypeSpec(`type`)
+      case _ =>
+        val variableParser = new VariableParser(this)
+        rootNode = variableParser.parse(curToken, id)
+    }
     rootNode
   }
 }
