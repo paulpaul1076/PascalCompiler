@@ -39,47 +39,9 @@ class VariableParser(parent: PascalParserTD) extends StatementParser(parent) {
     parse(toket, variableId)
   }
 
-  /**
-    * Parse a variable.
-    *
-    * @param toket      the initial token.
-    * @param variableId the symbol table entry of the variable identifier.
-    * @return the root node of the generated parse tree.
-    */
-  def parse(toket: Token, variableId: SymTabEntry): ICodeNode = {
-
-    var curToken = toket
-    // Check how the variable is defined.
-    val defnCode = variableId.getDefinition
-    if ((defnCode != DefinitionImpl.VARIABLE) &&
-      (defnCode != DefinitionImpl.VALUE_PARM) &&
-      (defnCode != DefinitionImpl.VAR_PARM)) {
-
-      PascalParserTD.errorHandler.flag(curToken, PascalErrorCode.INVALID_IDENTIFIER_USAGE, this)
-    }
-
-    variableId.appendLineNumber(curToken.getLineNumber)
-
-    val variableNode = ICodeFactory.createICodeNode(ICodeNodeTypeImpl.VARIABLE)
-    variableNode.setAttribute(ICodeKeyImpl.ID, variableId)
-
-    curToken = nextToken() // consume the identifier
-
-    // Parse array subscripts or record fields.
-    var variableType = variableId.getTypeSpec
-    while (VariableParser.SUBSCRIPT_FIELD_START_SET.contains(curToken.getTokenType)) {
-      val subFldNode = if (curToken.getTokenType == PascalTokenType.LEFT_BRACKET) parseSubscripts(variableType) else parseField(variableType)
-      curToken = currentToken()
-
-      // Update the variable's type.
-      // The variable node adopts the SUBSCRIPTS or FIELD node.
-      variableType = subFldNode.getTypeSpec
-      variableNode.addChild(subFldNode)
-    }
-
-    variableNode.setTypeSpec(variableType)
-    variableNode
-  }
+  // Set to true to parse a function name.
+  // as the target of an assignment.
+  private var isFunctionTarget = false
 
   private def parseSubscripts(variableTyp: TypeSpec): ICodeNode = {
     var variableType = variableTyp
@@ -160,6 +122,63 @@ class VariableParser(parent: PascalParserTD) extends StatementParser(parent) {
 
     fieldNode.setTypeSpec(variableType)
     fieldNode
+  }
+
+  /**
+    * Parse a variable.
+    *
+    * @param toket      the initial token.
+    * @param variableId the symbol table entry of the variable identifier.
+    * @return the root node of the generated parse tree.
+    */
+  def parse(toket: Token, variableId: SymTabEntry): ICodeNode = {
+
+    var curToken = toket
+    // Check how the variable is defined.
+    val defnCode = variableId.getDefinition
+    if ((defnCode != DefinitionImpl.VARIABLE) &&
+      (defnCode != DefinitionImpl.VALUE_PARM) &&
+      (defnCode != DefinitionImpl.VAR_PARM) &&
+      (!isFunctionTarget || defnCode != DefinitionImpl.FUNCTION)) {
+
+      PascalParserTD.errorHandler.flag(curToken, PascalErrorCode.INVALID_IDENTIFIER_USAGE, this)
+    }
+
+    variableId.appendLineNumber(curToken.getLineNumber)
+
+    val variableNode = ICodeFactory.createICodeNode(ICodeNodeTypeImpl.VARIABLE)
+    variableNode.setAttribute(ICodeKeyImpl.ID, variableId)
+
+    curToken = nextToken() // consume the identifier
+
+    // Parse array subscripts or record fields.
+    var variableType = variableId.getTypeSpec
+
+    if (!isFunctionTarget) { // function can't be followed by subscripts or ".fields".
+      while (VariableParser.SUBSCRIPT_FIELD_START_SET.contains(curToken.getTokenType)) {
+        val subFldNode = if (curToken.getTokenType == PascalTokenType.LEFT_BRACKET) parseSubscripts(variableType) else parseField(variableType)
+        curToken = currentToken()
+
+        // Update the variable's type.
+        // The variable node adopts the SUBSCRIPTS or FIELD node.
+        variableType = subFldNode.getTypeSpec
+        variableNode.addChild(subFldNode)
+      }
+    }
+
+    variableNode.setTypeSpec(variableType)
+    variableNode
+  }
+
+  /**
+    * Parse a function name as the target of an assignment statement.
+    *
+    * @param toket the initial token.
+    * @return the root node of the generated parse tree.
+    */
+  def parseFunctionNameTarget(toket: Token): ICodeNode = {
+    isFunctionTarget = true
+    parse(toket)
   }
 }
 

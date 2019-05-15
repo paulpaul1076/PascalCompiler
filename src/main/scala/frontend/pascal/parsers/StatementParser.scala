@@ -3,8 +3,9 @@ package frontend.pascal.parsers
 import java.util
 
 import frontend.pascal.{PascalErrorCode, PascalParserTD, PascalTokenType}
-import frontend.{EofToken, Token}
+import frontend.{EofToken, Parser, Token}
 import intermediate.icodeimpl.{ICodeKeyImpl, ICodeNodeTypeImpl}
+import intermediate.symtabimpl.DefinitionImpl
 import intermediate.{ICodeFactory, ICodeNode}
 
 /**
@@ -65,37 +66,57 @@ class StatementParser(pascalParser: PascalParserTD) extends PascalParserTD(pasca
   /**
    * Parse a statement. To be overridden by the specialized statement parser subclasses.
    *
-   * @param token the initial token
+    * @param toket the initial token
    * @return the root of the generated parse tree.
    */
-  def parse(token: Token): ICodeNode = {
-    val statementNode = token.getTokenType match {
+  def parse(toket: Token): ICodeNode = {
+    var curToken = toket
+    val statementNode = curToken.getTokenType match {
       case PascalTokenType.BEGIN      =>
         val compoundStatementParser = new CompoundStatementParser(this)
-        compoundStatementParser.parse(token)
+        compoundStatementParser.parse(curToken)
       case PascalTokenType.IDENTIFIER =>
-        val assignmentStatementParser = new AssignmentStatementParser(this)
-        assignmentStatementParser.parse(token)
+        val name = curToken.getText.toLowerCase
+        val id = Parser.symTabStack.lookup(name)
+        val idDefn = if (id != null) id.getDefinition else DefinitionImpl.UNDEFINED
+
+        // Assignment statement or procedure call.
+        idDefn.asInstanceOf[DefinitionImpl] match {
+          case DefinitionImpl.VARIABLE | DefinitionImpl.VALUE_PARM | DefinitionImpl.VAR_PARM | DefinitionImpl.UNDEFINED =>
+            val assignmentStatementParser = new AssignmentStatementParser(this)
+            assignmentStatementParser.parse(curToken)
+          case DefinitionImpl.FUNCTION => // TODO: how does a function get called without an assignment statement
+            val assignmentStatementParser = new AssignmentStatementParser(this)
+            assignmentStatementParser.parseFunctionNameAssignment(curToken)
+          case DefinitionImpl.PROCEDURE =>
+            val callParser = new CallParser(this)
+            callParser.parse(curToken)
+          case _ =>
+            PascalParserTD.errorHandler.flag(curToken, PascalErrorCode.UNEXPECTED_TOKEN, this)
+            curToken = nextToken() // consume identifier
+            null
+        }
+
       case PascalTokenType.REPEAT     =>
         val repeatStatementParser = new RepeatStatementParser(this)
-        repeatStatementParser.parse(token)
+        repeatStatementParser.parse(curToken)
       case PascalTokenType.WHILE      =>
         val whileStatementParser = new WhileStatementParser(this)
-        whileStatementParser.parse(token)
+        whileStatementParser.parse(curToken)
       case PascalTokenType.FOR        =>
         val forStatementParser = new ForStatementParser(this)
-        forStatementParser.parse(token)
+        forStatementParser.parse(curToken)
       case PascalTokenType.IF         =>
         val ifStatementParser = new IfStatementParser(this)
-        ifStatementParser.parse(token)
+        ifStatementParser.parse(curToken)
       case PascalTokenType.CASE       =>
         val caseStatementParser = new CaseStatementParser(this)
-        caseStatementParser.parse(token)
+        caseStatementParser.parse(curToken)
       case _                          =>
         ICodeFactory.createICodeNode(ICodeNodeTypeImpl.NO_OP)
     }
 
-    setLineNumber(statementNode, token)
+    setLineNumber(statementNode, curToken)
     statementNode
   }
 

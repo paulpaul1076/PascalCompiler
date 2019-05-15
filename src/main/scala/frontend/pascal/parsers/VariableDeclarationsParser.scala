@@ -4,6 +4,7 @@ import java.util
 
 import frontend.pascal.{PascalErrorCode, PascalParserTD, PascalTokenType}
 import frontend.{Parser, Token}
+import intermediate.symtabimpl.DefinitionImpl
 import intermediate.{Definition, SymTabEntry, TypeSpec}
 
 import scala.collection.JavaConverters._
@@ -32,7 +33,7 @@ class VariableDeclarationsParser(parent: PascalParserTD) extends PascalParserTD(
     // separated by semicolons.
     while (curToken.getTokenType == PascalTokenType.IDENTIFIER) {
       // Parse the identifier sublist and its type specification.
-      parseIdentifierSublist(curToken)
+      parseIdentifierSublist(curToken, VariableDeclarationsParser.IDENTIFIER_FOLLOW_SET, VariableDeclarationsParser.COMMA_SET)
 
       curToken = currentToken()
       val tokenType = curToken.getTokenType
@@ -50,43 +51,6 @@ class VariableDeclarationsParser(parent: PascalParserTD) extends PascalParserTD(
       }
       curToken = synchronize(VariableDeclarationsParser.IDENTIFIER_SET)
     }
-  }
-
-  protected def parseIdentifierSublist(toket: Token): util.ArrayList[SymTabEntry] = {
-    val sublist = new util.ArrayList[SymTabEntry]()
-    var curToken = toket
-    do {
-      curToken = synchronize(VariableDeclarationsParser.IDENTIFIER_START_SET)
-      val id = parseIdentifier(curToken)
-
-      if (id != null) {
-        sublist.add(id)
-      }
-
-      curToken = synchronize(VariableDeclarationsParser.COMMA_SET)
-      val tokenType = curToken.getTokenType
-
-      // Look for the comma
-      if (tokenType == PascalTokenType.COMMA) {
-        curToken = nextToken() // consume the comma
-
-        if (VariableDeclarationsParser.IDENTIFIER_FOLLOW_SET.contains(curToken.getTokenType)) {
-          PascalParserTD.errorHandler.flag(curToken, PascalErrorCode.MISSING_IDENTIFIER, this)
-        }
-      } else if (VariableDeclarationsParser.IDENTIFIER_START_SET.contains(tokenType)) {
-        PascalParserTD.errorHandler.flag(curToken, PascalErrorCode.MISSING_COMMA, this)
-      }
-    } while (!VariableDeclarationsParser.IDENTIFIER_FOLLOW_SET.contains(curToken.getTokenType))
-
-    // Parse the type specification.
-    val typeSpec = parseTypeSpec(curToken)
-
-    // Assign the type specification to each identifier in the list.
-    for (variableId: SymTabEntry <- sublist.asScala) {
-      variableId.setTypeSpec(typeSpec)
-    }
-
-    sublist
   }
 
   private def parseIdentifier(token: Token): SymTabEntry = {
@@ -112,7 +76,49 @@ class VariableDeclarationsParser(parent: PascalParserTD) extends PascalParserTD(
     id
   }
 
-  private def parseTypeSpec(token: Token): TypeSpec = {
+  def parseIdentifierSublist(toket: Token,
+                             followSet: util.HashSet[PascalTokenType],
+                             commaSet: util.HashSet[PascalTokenType]): util.ArrayList[SymTabEntry] = {
+    var curToken = toket
+    val sublist = new util.ArrayList[SymTabEntry]()
+
+    do {
+      curToken = synchronize(VariableDeclarationsParser.IDENTIFIER_START_SET)
+      val id = parseIdentifier(curToken)
+
+      if (id != null) {
+        sublist.add(id)
+      }
+
+      curToken = synchronize(commaSet)
+      val tokenType = curToken.getTokenType
+
+      // Look for the comma.
+      if (tokenType == PascalTokenType.COMMA) {
+        curToken = nextToken() // consume the comma
+
+        if (followSet.contains(curToken.getTokenType)) {
+          PascalParserTD.errorHandler.flag(curToken, PascalErrorCode.MISSING_IDENTIFIER, this)
+        }
+      } else if (VariableDeclarationsParser.IDENTIFIER_START_SET.contains(tokenType)) {
+        PascalParserTD.errorHandler.flag(curToken, PascalErrorCode.MISSING_COMMA, this)
+      }
+    } while (!followSet.contains(curToken.getTokenType))
+
+    if (definition != DefinitionImpl.PROGRAM_PARM) {
+      // Parse the type specification.
+      val `type` = parseTypeSpec(curToken)
+
+      // Assign the type specification to each identifier in the list.
+      for (variableId: SymTabEntry <- sublist.asScala) {
+        variableId.setTypeSpec(`type`)
+      }
+    }
+
+    sublist
+  }
+
+  def parseTypeSpec(token: Token): TypeSpec = {
     // Synchronize on the : token.
     var curToken = synchronize(VariableDeclarationsParser.COLON_SET)
     if (curToken.getTokenType == PascalTokenType.COLON) {
@@ -124,6 +130,15 @@ class VariableDeclarationsParser(parent: PascalParserTD) extends PascalParserTD(
     // Parse the type specification
     val typeSpecificationParser = new TypeSpecificationParser(this)
     val typeSpec = typeSpecificationParser.parse(curToken)
+
+    // Formal parameters and functions must have named types.
+    if (definition != DefinitionImpl.VARIABLE &&
+      definition != DefinitionImpl.FIELD &&
+      typeSpec != null &&
+      typeSpec.getIdentifier == null) {
+
+      PascalParserTD.errorHandler.flag(curToken, PascalErrorCode.INVALID_TYPE, this)
+    }
 
     typeSpec
   }

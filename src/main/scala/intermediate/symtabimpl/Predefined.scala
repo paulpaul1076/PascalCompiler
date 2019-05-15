@@ -3,7 +3,7 @@ package intermediate.symtabimpl
 import java.util
 
 import intermediate.typeimpl.{TypeFormImpl, TypeKeyImpl}
-import intermediate.{SymTabEntry, SymTabStack, TypeFactory, TypeSpec}
+import intermediate._
 
 object Predefined {
   // Predefined types.
@@ -21,6 +21,29 @@ object Predefined {
   var falseId: SymTabEntry = _
   var trueId: SymTabEntry = _
 
+  // Standard routines.
+  var readId: SymTabEntry = _
+  var readlnId: SymTabEntry = _
+  var writeId: SymTabEntry = _
+  var writelnId: SymTabEntry = _
+  var absId: SymTabEntry = _
+  var arctanId: SymTabEntry = _
+  var chrId: SymTabEntry = _
+  var cosId: SymTabEntry = _
+  var eofId: SymTabEntry = _
+  var eolnId: SymTabEntry = _
+  var expId: SymTabEntry = _
+  var lnId: SymTabEntry = _
+  var oddId: SymTabEntry = _
+  var ordId: SymTabEntry = _
+  var predId: SymTabEntry = _
+  var roundId: SymTabEntry = _
+  var sinId: SymTabEntry = _
+  var sqrId: SymTabEntry = _
+  var sqrtId: SymTabEntry = _
+  var succId: SymTabEntry = _
+  var truncId: SymTabEntry = _
+
   /**
     * Initialize a symbol table stack with predefined identifiers.
     *
@@ -29,6 +52,57 @@ object Predefined {
   def initialize(symTabStack: SymTabStack): Unit = {
     initializeTypes(symTabStack)
     initializeConstants(symTabStack)
+    initializeStandardRoutines(symTabStack)
+  }
+
+  /**
+    * Initialize the standard procedures and functions.
+    *
+    * @param symTabStack the symbol table stack to initialize.
+    */
+  private def initializeStandardRoutines(symTabStack: SymTabStack): Unit = {
+    readId = enterStandard(symTabStack, DefinitionImpl.PROCEDURE, "read", RoutineCodeImpl.READ)
+    readlnId = enterStandard(symTabStack, DefinitionImpl.PROCEDURE, "readln", RoutineCodeImpl.READLN)
+    writeId = enterStandard(symTabStack, DefinitionImpl.PROCEDURE, "write", RoutineCodeImpl.WRITE)
+    writelnId = enterStandard(symTabStack, DefinitionImpl.PROCEDURE, "writeln", RoutineCodeImpl.WRITELN)
+
+    absId = enterStandard(symTabStack, DefinitionImpl.FUNCTION, "abs", RoutineCodeImpl.ABS)
+    arctanId = enterStandard(symTabStack, DefinitionImpl.FUNCTION, "arctan", RoutineCodeImpl.ARCTAN)
+    chrId = enterStandard(symTabStack, DefinitionImpl.FUNCTION, "chr", RoutineCodeImpl.CHR)
+    cosId = enterStandard(symTabStack, DefinitionImpl.FUNCTION, "cos", RoutineCodeImpl.COS)
+    eofId = enterStandard(symTabStack, DefinitionImpl.FUNCTION, "eof", RoutineCodeImpl.EOF)
+    eolnId = enterStandard(symTabStack, DefinitionImpl.FUNCTION, "eoln", RoutineCodeImpl.EOLN)
+    expId = enterStandard(symTabStack, DefinitionImpl.FUNCTION, "exp", RoutineCodeImpl.EXP)
+    lnId = enterStandard(symTabStack, DefinitionImpl.FUNCTION, "ln", RoutineCodeImpl.LN)
+    oddId = enterStandard(symTabStack, DefinitionImpl.FUNCTION, "odd", RoutineCodeImpl.ODD)
+    ordId = enterStandard(symTabStack, DefinitionImpl.FUNCTION, "ord", RoutineCodeImpl.ORD)
+    predId = enterStandard(symTabStack, DefinitionImpl.FUNCTION, "pred", RoutineCodeImpl.PRED)
+    roundId = enterStandard(symTabStack, DefinitionImpl.FUNCTION, "round", RoutineCodeImpl.ROUND)
+    sinId = enterStandard(symTabStack, DefinitionImpl.FUNCTION, "sin", RoutineCodeImpl.SIN)
+    sqrId = enterStandard(symTabStack, DefinitionImpl.FUNCTION, "sqr", RoutineCodeImpl.SQR)
+    sqrtId = enterStandard(symTabStack, DefinitionImpl.FUNCTION, "sqrt", RoutineCodeImpl.SQRT)
+    succId = enterStandard(symTabStack, DefinitionImpl.FUNCTION, "succ", RoutineCodeImpl.SUCC)
+    truncId = enterStandard(symTabStack, DefinitionImpl.FUNCTION, "trunc", RoutineCodeImpl.TRUNC)
+  }
+
+  /**
+    * Enter a standard procedure or function into the symbol table stack.
+    *
+    * @param symTabStack the symbol table stack to initialize.
+    * @param defn        either PROCEDURE or FUNCTION.
+    * @param name        the procedure or function name.
+    * @param routineCode routine code (idk what that is) // TODO: find out
+    * @return symbol table entry to enter into the level 0.
+    */
+  private def enterStandard(symTabStack: SymTabStack,
+                            defn: Definition,
+                            name: String,
+                            routineCode: RoutineCode): SymTabEntry = {
+    val procId = symTabStack.enterLocal(name)
+    procId.setDefinition(defn)
+    procId.setAttribute(SymTabKeyImpl.ROUTINE_CODE, routineCode)
+
+    procId
   }
 
   /**

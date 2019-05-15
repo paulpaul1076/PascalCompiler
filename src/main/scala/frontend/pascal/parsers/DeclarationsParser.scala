@@ -4,6 +4,7 @@ import java.util
 
 import frontend.Token
 import frontend.pascal.{PascalParserTD, PascalTokenType}
+import intermediate.SymTabEntry
 import intermediate.symtabimpl.DefinitionImpl
 
 /**
@@ -18,14 +19,14 @@ class DeclarationsParser(parent: PascalParserTD) extends PascalParserTD(parent) 
     *
     * @param toket starting token.
     */
-  def parse(toket: Token): Unit = {
+  def parse(toket: Token, parentId: SymTabEntry): SymTabEntry = {
     var curToken = synchronize(DeclarationsParser.DECLARATION_START_SET)
 
     if (curToken.getTokenType == PascalTokenType.CONST) {
       curToken = nextToken() // consume CONST
 
       val constantDefinitionsParser = new ConstantDefinitionsParser(this)
-      constantDefinitionsParser.parse(curToken)
+      constantDefinitionsParser.parse(curToken) // TODO: pass null
     }
 
     curToken = synchronize(DeclarationsParser.TYPE_START_SET)
@@ -34,7 +35,7 @@ class DeclarationsParser(parent: PascalParserTD) extends PascalParserTD(parent) 
       curToken = nextToken() // consume TYPE
 
       val typeDefinitionsParser = new TypeDefinitionsParser(this)
-      typeDefinitionsParser.parse(curToken)
+      typeDefinitionsParser.parse(curToken) // TODO: pass null
     }
 
     curToken = synchronize(DeclarationsParser.VAR_START_SET)
@@ -43,10 +44,29 @@ class DeclarationsParser(parent: PascalParserTD) extends PascalParserTD(parent) 
       curToken = nextToken() // consume VAR
 
       val variableDeclarationsParser = new VariableDeclarationsParser(this)
-      variableDeclarationsParser.setDefinition(DefinitionImpl.VARIABLE)
-      variableDeclarationsParser.parse(curToken)
+      variableDeclarationsParser.setDefinition(DefinitionImpl.VARIABLE) // TODO: why is this necessary? Answer: for variable declaration parser!
+      variableDeclarationsParser.parse(curToken) // TODO: pass null?????
     }
+
     curToken = synchronize(DeclarationsParser.ROUTINE_START_SET)
+    var tokenType = curToken.getTokenType
+
+    while (tokenType == PascalTokenType.PROCEDURE || tokenType == PascalTokenType.FUNCTION) {
+      val routineParser = new DeclaredRoutineParser(this)
+      routineParser.parse(curToken, parentId)
+
+      // Look for one or more semicolons after a definition.
+      curToken = currentToken()
+      if (curToken.getTokenType == PascalTokenType.SEMICOLON) {
+        while (curToken.getTokenType == PascalTokenType.SEMICOLON) {
+          curToken = nextToken() // consume the ;
+        }
+      } // TODO: find out if the semicolons are optional
+
+      curToken = synchronize(DeclarationsParser.ROUTINE_START_SET) // TODO: why don't we synchronize at the beginning of the loop here?
+      tokenType = curToken.getTokenType
+    }
+    null
   }
 }
 

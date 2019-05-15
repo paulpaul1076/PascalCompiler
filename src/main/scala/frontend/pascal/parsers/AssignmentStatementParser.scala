@@ -15,6 +15,21 @@ import intermediate.{ICodeFactory, ICodeNode}
   * @param pascalParser parent parser.
   */
 class AssignmentStatementParser(pascalParser: PascalParserTD) extends StatementParser(pascalParser) {
+  // Set to true to parse a function name.
+  // as the target of an assignment.
+  private var isFunctionTarget = false
+
+  /**
+    * Parse an assignment to a function name.
+    *
+    * @param token token.
+    * @return ICodeNode.
+    */
+  def parseFunctionNameAssignment(token: Token): ICodeNode = {
+    isFunctionTarget = true
+    parse(token)
+  }
+
   /**
     * Parse an assignment statement.
     *
@@ -28,7 +43,10 @@ class AssignmentStatementParser(pascalParser: PascalParserTD) extends StatementP
 
     //Parse the target variable.
     val variableParser = new VariableParser(this)
-    val targetNode = variableParser.parse(curToken)
+    val targetNode = if (isFunctionTarget)
+      variableParser.parseFunctionNameTarget(curToken)
+    else
+      variableParser.parse(curToken)
     val targetType = if (targetNode != null) targetNode.getTypeSpec else Predefined.undefinedType
 
     // The ASSIGN node adopts the variable node as its first child.
@@ -62,8 +80,8 @@ class AssignmentStatementParser(pascalParser: PascalParserTD) extends StatementP
 }
 
 /**
- * Companion object.
- */
+  * Companion object.
+  */
 private object AssignmentStatementParser {
   val COLON_EQUALS_SET: util.HashSet[PascalTokenType] = ExpressionParser.EXPR_START_SET.clone().asInstanceOf[util.HashSet[PascalTokenType]]
   COLON_EQUALS_SET.add(PascalTokenType.COLON_EQUALS)

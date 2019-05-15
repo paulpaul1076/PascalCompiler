@@ -192,7 +192,6 @@ class ExpressionParser(pascalParser: PascalParserTD) extends StatementParser(pas
       // as its first child.
       val nodeType = ExpressionParser.MULT_OPS_MAP.get(operator)
       val opNode = ICodeFactory.createICodeNode(nodeType)
-
       opNode.addChild(rootNode)
 
       curToken = nextToken() // consume the operator
@@ -201,14 +200,10 @@ class ExpressionParser(pascalParser: PascalParserTD) extends StatementParser(pas
       // the term's tree as its second child.
       val factorNode = parseFactor(curToken)
       opNode.addChild(factorNode)
+      val factorType = if (factorNode != null) factorNode.getTypeSpec else Predefined.undefinedType
 
       // The operator node becomes the new root node.
       rootNode = opNode
-
-      curToken = currentToken()
-      tokenType = curToken.getTokenType
-
-      val factorType = if (factorNode != null) factorNode.getTypeSpec else Predefined.undefinedType
 
       // Determine the result type.
       operator.asInstanceOf[PascalTokenType] match {
@@ -388,6 +383,9 @@ class ExpressionParser(pascalParser: PascalParserTD) extends StatementParser(pas
         curToken = nextToken() // consume the enum constant identifier
 
         rootNode.setTypeSpec(`type`)
+      case DefinitionImpl.FUNCTION =>
+        val callParser = new CallParser(this)
+        rootNode = callParser.parse(curToken)
       case _ =>
         val variableParser = new VariableParser(this)
         rootNode = variableParser.parse(curToken, id)
