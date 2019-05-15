@@ -24,7 +24,7 @@ class BlockParser(parent: PascalParserTD) extends PascalParserTD(parent) {
     val statementParser = new StatementParser(this)
 
     // Parse any declaration.
-    declarationsParser.parse(toket) // fills up this routine's symbol table with const, type and var definitions.
+    declarationsParser.parse(toket, routineId) // fills up this routine's symbol table with const, type and var definitions.
 
     val curToken = synchronize(StatementParser.STMT_START_SET) // skip junk.
     val tokenType = curToken.getTokenType
