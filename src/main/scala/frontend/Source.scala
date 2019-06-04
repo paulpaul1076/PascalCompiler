@@ -115,6 +115,33 @@ class Source(private val reader: BufferedReader) extends MessageProducer {
     }
   }
 
+  /**
+    * @return true if at the end of the line, else return false.
+    */
+  def atEol(): Boolean = {
+    return (line != null) && (currentPos == line.length)
+  }
+
+  /**
+    * @return true if at the end of the file, else return false.
+    */
+  def atEof(): Boolean = {
+    if (currentPos == -2) {
+      readLine()
+    }
+    return line == null
+  }
+
+  /**
+    * Skip the rest of the current input line
+    * by forcing the next read to read a new line.
+    */
+  def skipToNextLine(): Unit = {
+    if (line != null) {
+      currentPos = line.length + 1
+    }
+  }
+
   // --------------- MessageProducer
 
   /**

@@ -51,4 +51,21 @@ abstract class Scanner(protected val source: Source) {
   def nextChar(): Char = {
     source.nextChar()
   }
+
+  /**
+    * Call the source's atEol() method.
+    * @return true if at the end of the source line, else return false.
+    */
+  def atEol(): Boolean = source.atEol()
+
+  /**
+    * Call the source's atEof() method.
+    * @return true if at the end of the source file, else return false.
+    */
+  def atEof(): Boolean = source.atEof()
+
+  /**
+    * Call the source's skipToNextLine() method.
+    */
+  def skipToNextLine(): Unit = source.skipToNextLine()
 }
