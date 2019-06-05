@@ -18,12 +18,16 @@ class Pascal(operation: String, filePath: String, flags: String) {
   private var source: Source = _
   private var iCode: ICode = _
   private var backend: Backend = _
-
   private var symTabStack: SymTabStack = _
 
   try {
-    val intermediate = flags.indexOf('i') > -1
-    val xref = flags.indexOf('x') > -1
+    Pascal.intermediate = flags.indexOf('i') > -1
+    Pascal.xref = flags.indexOf('x') > -1
+    Pascal.lines = flags.indexOf('l') > -1
+    Pascal.assign = flags.indexOf('a) > -1
+    Pascal.fetch = flags.indexOf('f') > -1
+    Pascal.call = flags.indexOf('c') > -1
+    Pascal.`return` = flags.indexOf('r') > -1
 
     source = new Source(new BufferedReader(new FileReader(filePath)))
     source.addMessageListener(new SourceMessageListener())
@@ -42,12 +46,12 @@ class Pascal(operation: String, filePath: String, flags: String) {
       val programId = symTabStack.getProgramId()
       iCode = programId.getAttribute(SymTabKeyImpl.ROUTINE_ICODE).asInstanceOf[ICode]
 
-      if (xref) { // Print the symbol table
+      if (Pascal.xref) { // Print the symbol table
         val crossReferencer = new CrossReferencer
         crossReferencer.print(symTabStack)
       }
 
-      if (intermediate) { // Print AST
+      if (Pascal.intermediate) { // Print AST
         val treePrinter = new ParseTreePrinter(System.out)
         treePrinter.print(iCode)
       }
@@ -64,7 +68,17 @@ class Pascal(operation: String, filePath: String, flags: String) {
   * Companion object.
   */
 object Pascal {
-  val FLAGS = "[-ix]"
+
+  var intermediate: Boolean = _
+  var xref: Boolean = _
+  var lines: Boolean = _
+  var assign: Boolean = _
+  var fetch: Boolean = _
+  var call: Boolean = _
+  var `return`: Boolean = _
+
+
+  val FLAGS = "[-ixlafcr]"
   val USAGE = "Usage: Pascal execute|compile " + FLAGS + " <source file path>"
 
   val PARSER_SUMMARY_FORMAT = "" +

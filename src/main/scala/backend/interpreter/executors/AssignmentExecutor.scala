@@ -1,9 +1,10 @@
 package backend.interpreter.executors
 
-import backend.interpreter.Executor
-import intermediate.{ICodeNode, SymTabEntry}
+import backend.interpreter.{Cell, Executor}
 import intermediate.icodeimpl.ICodeKeyImpl
-import intermediate.symtabimpl.SymTabKeyImpl
+import intermediate.symtabimpl.Predefined
+import intermediate.typeimpl.TypeKeyImpl
+import intermediate.{ICodeNode, SymTabEntry, TypeSpec}
 import message.{Message, MessageType}
 
 /**
@@ -25,35 +26,64 @@ class AssignmentExecutor(parent: Executor) extends StatementExecutor(parent) {
     val children = node.getChildren
     val variableNode = children.get(0)
     val expressionNode = children.get(1)
+    val variableId = variableNode.getAttribute(ICodeKeyImpl.ID).asInstanceOf[SymTabEntry]
 
-    // Execute the expression and get its value.
+    // Execute the expression and get its reference and
+    // execute the expression to get its value.
     val expressionExecutor = new ExpressionExecutor(this)
+    val targetCell = expressionExecutor.executeVariable(variableNode)
+    val targetType = variableNode.getTypeSpec
+    val valueType = expressionNode.getTypeSpec.baseType
     val value = expressionExecutor.execute(expressionNode)
 
-    // Set the value as an attribute of the variable's symbol table entry.
-    val variableId = variableNode.getAttribute(ICodeKeyImpl.ID).asInstanceOf[SymTabEntry]
-    variableId.setAttribute(SymTabKeyImpl.DATA_VALUE, value)
-    sendMessage(node, variableId.getName, value)
+    assignValue(node, variableId, targetCell, targetType, value, valueType)
 
     Executor.executionCount += 1
     null
   }
 
-  /**
-   * Send a message about the assignment operation.
-   *
-   * @param node         the assign node.
-   * @param variableName the name of the target variable.
-   * @param value        the value of the expression.
-   */
-  private def sendMessage(node: ICodeNode, variableName: String, value: Any): Unit = {
-    val lineNumber = node.getAttribute(ICodeKeyImpl.LINE)
+  def assignValue(node: ICodeNode, targetId: SymTabEntry,
+                  targetCell: Cell, targetType: TypeSpec,
+                  valu: Any, valueType: TypeSpec): Unit = {
+    // Range check
+    var x = valu
+    x = checkRange(node, targetType, x)
 
-    // Send an ASSIGN message.
-    if (lineNumber != null) {
-      sendMessage(new Message(
-        MessageType.ASSIGN, List[Any](lineNumber, variableName, value)
-      ))
+    // Set the target's value
+    // Convert an integer value to real if necessary.
+    if (targetType == Predefined.realType && valueType == Predefined.integerType) {
+      targetCell.setValue(new java.lang.Float(x.asInstanceOf[Integer].intValue()))
     }
+    // String assignment:
+    //    target length < value length: truncate the value
+    //    target length > value length: blank pad the value
+    else if (targetType.isPascalString) {
+      val targetLength = targetType.getAttribute(TypeKeyImpl.ARRAY_ELEMENT_COUNT).asInstanceOf[Int]
+      val valueLength = valueType.getAttribute(TypeKeyImpl.ARRAY_ELEMENT_COUNT).asInstanceOf[Int]
+      var stringValue = x.asInstanceOf[String]
+
+      // Truncate the value string.
+      if (targetLength < valueLength) {
+        stringValue = stringValue.substring(0, targetLength)
+      }
+      // Pad the value string with blanks at the right end.
+      else if (targetLength > valueLength) {
+        val buffer = new StringBuilder(stringValue)
+
+        for (i <- valueLength until targetLength) {
+          buffer.append(" ")
+        }
+
+        stringValue = buffer.toString()
+      }
+
+      targetCell.setValue(copyOf(toPascal(targetType, stringValue), node))
+    }
+    // Simple assignment.
+    else {
+      targetCell.setValue(copyOf(toPascal(targetType, x), node))
+    }
+
+    sendAssignMessage(node, targetId.getName, x)
   }
 }

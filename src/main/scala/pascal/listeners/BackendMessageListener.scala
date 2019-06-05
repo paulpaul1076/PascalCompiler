@@ -1,6 +1,7 @@
 package pascal.listeners
 
 import message.{Message, MessageListener, MessageType}
+import pascal.Pascal
 
 /**
  * Listener for backend messages.
@@ -14,6 +15,46 @@ class BackendMessageListener extends MessageListener {
   override def messageReceived(message: Message): Unit = {
     message.messageType match {
 
+      case MessageType.SOURCE_LINE =>
+        if (Pascal.lines) {
+          val lineNumber = message.body.asInstanceOf[Int]
+          println(f">>> AT LINE $lineNumber%03d")
+        }
+      case MessageType.ASSIGN =>
+        if (Pascal.assign) {
+          val body: List[Any] = message.body.asInstanceOf[List[Any]]
+          val lineNumber = body(0).asInstanceOf[Int]
+          val variableName = body(1).asInstanceOf[String]
+          val value = body(2)
+
+          println(f">>> AT LINE $lineNumber%03d: $variableName = $value")
+        }
+
+      case MessageType.FETCH =>
+        if (Pascal.fetch) {
+          val body: List[Any] = message.body.asInstanceOf[List[Any]]
+          val lineNumber = body(0).asInstanceOf[Int]
+          val variableName = body(1).asInstanceOf[String]
+          val value = body(2)
+
+          println(f">>> AT LINE $lineNumber%03d: $variableName : $value")
+        }
+      case MessageType.CALL =>
+        if (Pascal.call) {
+          val body: List[Any] = message.body.asInstanceOf[List[Any]]
+          val lineNumber = body(0).asInstanceOf[Int]
+          val routineName = body(1).asInstanceOf[String]
+
+          println(f">>> AT LINE $lineNumber%03d: CALL $routineName")
+        }
+      case MessageType.RETURN =>
+        if (Pascal.`return`) {
+          val body: List[Any] = message.body.asInstanceOf[List[Any]]
+          val lineNumber = body(0).asInstanceOf[Int]
+          val routineName = body(1).asInstanceOf[String]
+
+          println(f">>> AT LINE $lineNumber%03d: RETURN FROM $routineName")
+        }
 
       case MessageType.INTERPRETER_SUMMARY =>
         val body = message.body.asInstanceOf[List[Any]]

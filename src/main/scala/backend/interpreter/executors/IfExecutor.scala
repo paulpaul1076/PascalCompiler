@@ -30,7 +30,7 @@ class IfExecutor(parent: Executor) extends StatementExecutor(parent) {
     val b = expressionExecutor.execute(exprNode).asInstanceOf[Boolean]
     if (b) {
       statementExecutor.execute(thenStmtNode)
-    } else if (thenStmtNode != null) {
+    } else if (elseStmtNode != null) {
       statementExecutor.execute(elseStmtNode)
     }
 
