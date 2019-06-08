@@ -8,6 +8,7 @@ import message.{Message, MessageHandler, MessageListener, MessageProducer}
  */
 abstract class Backend extends MessageProducer {
 
+  protected var messageHandler = new MessageHandler
   /**
    * Symbol table.
    */
@@ -38,7 +39,7 @@ abstract class Backend extends MessageProducer {
    * @param listener to be added.
    */
   override def addMessageListener(listener: MessageListener): Unit = {
-    Backend.messageHandler.addMessageListener(listener)
+    messageHandler.addMessageListener(listener)
   }
 
   /**
@@ -47,7 +48,7 @@ abstract class Backend extends MessageProducer {
    * @param listener to be removed.
    */
   override def removeMessageListener(listener: MessageListener): Unit = {
-    Backend.messageHandler.removeMessageListener(listener)
+    messageHandler.removeMessageListener(listener)
   }
 
   /**
@@ -56,13 +57,6 @@ abstract class Backend extends MessageProducer {
    * @param message the message to set.
    */
   override def sendMessage(message: Message): Unit = {
-    Backend.messageHandler.sendMessage(message)
+    messageHandler.sendMessage(message)
   }
-}
-
-/**
- * Companion object for the backend component.
- */
-object Backend {
-  protected val messageHandler = new MessageHandler
 }

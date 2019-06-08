@@ -11,6 +11,10 @@ import message.{Message, MessageHandler, MessageListener, MessageProducer}
 abstract class Parser(protected val scanner: Scanner) extends MessageProducer {
 
   /**
+    * A delegate instance that handles message sending.
+    */
+  val messageHandler: MessageHandler = new MessageHandler // shouldn't be static
+  /**
     * Method to be overridden by a specific parser.
     */
   def parse(): Unit
@@ -57,7 +61,7 @@ abstract class Parser(protected val scanner: Scanner) extends MessageProducer {
     * @param listener listener to be added.
     */
   override def addMessageListener(listener: MessageListener): Unit = {
-    Parser.messageHandler.addMessageListener(listener)
+    messageHandler.addMessageListener(listener)
   }
 
   /**
@@ -66,7 +70,7 @@ abstract class Parser(protected val scanner: Scanner) extends MessageProducer {
     * @param listener listener to be removed.
     */
   override def removeMessageListener(listener: MessageListener): Unit = {
-    Parser.messageHandler.removeMessageListener(listener)
+    messageHandler.removeMessageListener(listener)
   }
 
   /**
@@ -75,7 +79,7 @@ abstract class Parser(protected val scanner: Scanner) extends MessageProducer {
     * @param message message the message to set.
     */
   override def sendMessage(message: Message): Unit = {
-    Parser.messageHandler.sendMessage(message)
+    messageHandler.sendMessage(message)
   }
 }
 
@@ -92,9 +96,4 @@ object Parser {
     * Symbol table stack.
     */
   var symTabStack: SymTabStack = SymTabFactory.createSymTabStack() // TODO: should it be global like this?
-
-  /**
-    * A delegate instance that handles message sending.
-    */
-  val messageHandler: MessageHandler = new MessageHandler // TODO: should it be global like this?
 }
