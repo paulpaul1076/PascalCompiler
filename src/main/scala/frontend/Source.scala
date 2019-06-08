@@ -14,6 +14,8 @@ import message._
  * @param reader reader of the program.
  */
 class Source(private val reader: BufferedReader) extends MessageProducer {
+
+  val messageHandler = new MessageHandler
   /**
    * Source line.
    */
@@ -150,7 +152,7 @@ class Source(private val reader: BufferedReader) extends MessageProducer {
    * @param listener listener to be added.
    */
   override def addMessageListener(listener: MessageListener): Unit = {
-    Source.messageHandler.addMessageListener(listener)
+    messageHandler.addMessageListener(listener)
   }
 
   /**
@@ -159,7 +161,7 @@ class Source(private val reader: BufferedReader) extends MessageProducer {
    * @param listener listener to be removed.
    */
   override def removeMessageListener(listener: MessageListener): Unit = {
-    Source.messageHandler.removeMessageListener(listener)
+    messageHandler.removeMessageListener(listener)
   }
 
   /**
@@ -168,7 +170,7 @@ class Source(private val reader: BufferedReader) extends MessageProducer {
    * @param message message the message to set.
    */
   override def sendMessage(message: Message): Unit = {
-    Source.messageHandler.sendMessage(message)
+    messageHandler.sendMessage(message)
   }
 }
 
@@ -177,7 +179,6 @@ class Source(private val reader: BufferedReader) extends MessageProducer {
  */
 object Source {
 
-  val messageHandler = new MessageHandler
   /**
    * End of line.
    */

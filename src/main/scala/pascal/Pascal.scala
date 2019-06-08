@@ -1,6 +1,6 @@
 package pascal
 
-import java.io.{BufferedReader, FileReader}
+import java.io.{BufferedReader, File, FileReader}
 
 import backend.{Backend, BackendFactory}
 import frontend.{FrontendFactory, Parser, Source}
@@ -12,7 +12,7 @@ import util.{CrossReferencer, ParseTreePrinter}
 /**
   * Compile or interpret a Pascal source program.
   */
-class Pascal(operation: String, filePath: String, flags: String) {
+class Pascal(operation: String, sourcePath: String, inputPath: String, flags: String) {
 
   private var parser: Parser = _
   private var source: Source = _
@@ -29,13 +29,13 @@ class Pascal(operation: String, filePath: String, flags: String) {
     Pascal.call = flags.indexOf('c') > -1
     Pascal.`return` = flags.indexOf('r') > -1
 
-    source = new Source(new BufferedReader(new FileReader(filePath)))
+    source = new Source(new BufferedReader(new FileReader(sourcePath)))
     source.addMessageListener(new SourceMessageListener())
 
     parser = FrontendFactory.createParser("Pascal", "top-down", source)
     parser.addMessageListener(new ParserMessageListener())
 
-    backend = BackendFactory.createBackend(operation) // execute(interpret) or compile
+    backend = BackendFactory.createBackend(operation, inputPath) // execute(interpret) or compile
     backend.addMessageListener(new BackendMessageListener())
 
     parser.parse()
@@ -114,12 +114,27 @@ object Pascal {
         i += 1
       }
 
+      var sourcePath: String = null
+      var inputPath: String = null
+
       if (i < args.length) {
-        val path = args(i)
-        new Pascal(operation, path, flags)
+        sourcePath = args(i)
       } else {
         throw new Exception
       }
+
+      // Runtime input data file path.
+      i += 1
+      if (i < args.length) {
+        inputPath = args(i)
+
+        val inputFile = new File(inputPath)
+        if (!inputFile.exists()) {
+          println("Input file '" + inputPath + "' does not exist.")
+          throw new Exception
+        }
+      }
+      new Pascal(operation, sourcePath, inputPath, flags)
     } catch {
       case _: Exception => println(Pascal.USAGE)
     }

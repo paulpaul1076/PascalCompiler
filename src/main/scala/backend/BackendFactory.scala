@@ -3,9 +3,10 @@ package backend
 import java.lang
 
 import backend.compiler.CodeGenerator
-import backend.interpreter.Executor
+import backend.interpreter.{Debugger, DebuggerType, Executor, RuntimeStack}
 import intermediate.TypeSpec
 import intermediate.symtabimpl.Predefined
+import backend.interpreter.debuggers.CommandLineDebugger
 
 /**
  * A factory class that crates compiler and interpreter components.
@@ -18,13 +19,31 @@ object BackendFactory {
    * @param operation either "compile" or "execute".
    * @return a compiler or an interpreter back end component.
    */
-  def createBackend(operation: String): Backend = {
+  def createBackend(operation: String, inputPath: String): Backend = {
     if (operation.equalsIgnoreCase("compile")) {
       new CodeGenerator
     } else if (operation.equalsIgnoreCase("execute")) {
-      new Executor(null)
+      new Executor(inputPath)
     } else {
       throw new Exception("Backend factory: Invalid operation '" + operation + "'")
+    }
+  }
+
+  /**
+    * Create the debugger according to DebuggerType passed in.
+    * @param `type` the type of the debugger
+    * @param backend the backend.
+    * @param runtimeStack the runtime stack.
+    * @return Debugger.
+    */
+  def createDebugger(`type`: DebuggerType, backend: Backend, runtimeStack: RuntimeStack) : Debugger = {
+    `type` match {
+      case DebuggerType.COMMAND_LINE =>
+        return new CommandLineDebugger(backend, runtimeStack)
+      case DebuggerType.GUI =>
+        return null
+      case _ =>
+        return null
     }
   }
 
