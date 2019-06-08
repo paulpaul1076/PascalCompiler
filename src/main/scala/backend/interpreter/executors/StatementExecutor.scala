@@ -220,10 +220,10 @@ class StatementExecutor(parent: Executor) extends Executor(parent) {
     var lineNumber: Any = null
     var curNode = node
     // Go up the parent links to look for a line number.
-    lineNumber = node.getAttribute(ICodeKeyImpl.LINE)
+    lineNumber = curNode.getAttribute(ICodeKeyImpl.LINE)
     while (curNode != null && lineNumber == null) {
+      lineNumber = curNode.getAttribute(ICodeKeyImpl.LINE)
       curNode = curNode.getParent
-      lineNumber = node.getAttribute(ICodeKeyImpl.LINE)
     }
 
     return lineNumber

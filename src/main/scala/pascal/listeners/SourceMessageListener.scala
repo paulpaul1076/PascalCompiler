@@ -1,6 +1,7 @@
 package pascal.listeners
 
 import message.{Message, MessageListener, MessageType}
+import ide.IDEControl._
 
 /**
  * Listener for source messages.
@@ -19,7 +20,7 @@ class SourceMessageListener extends MessageListener {
         val lineNumber = body(0).asInstanceOf[Int]
         val lineText = body(1).asInstanceOf[String]
 
-        println(f"$lineNumber%03d $lineText%s")
+        println(LISTING_TAG + f"$lineNumber%03d $lineText%s")
     }
   }
 }

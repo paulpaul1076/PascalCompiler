@@ -6,7 +6,7 @@ import backend.interpreter.Executor
 import intermediate.ICodeNode
 import intermediate.icodeimpl.{ICodeKeyImpl, ICodeNodeTypeImpl}
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 /**
   * A faster version of SelectExecutor slow, making use of jump tables.
@@ -62,7 +62,7 @@ class SelectExecutorFast(parent: Executor) extends StatementExecutor(parent) {
     for (i <- 1 until selectChildren.size()) {
       val child = selectChildren.get(i)
       val constants = child.getChildren.get(0).getChildren
-      for (constantNode: ICodeNode <- constants) {
+      for (constantNode: ICodeNode <- constants.asScala) {
         var value = constantNode.getAttribute(ICodeKeyImpl.VALUE)
         if (constantNode.getType == ICodeNodeTypeImpl.STRING_CONSTANT) {
           /**

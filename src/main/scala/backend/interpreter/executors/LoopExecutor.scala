@@ -4,7 +4,7 @@ import backend.interpreter.Executor
 import intermediate.ICodeNode
 import intermediate.icodeimpl.ICodeNodeTypeImpl
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.util.control.Breaks
 
 /**
@@ -32,7 +32,7 @@ class LoopExecutor(parent: Executor) extends StatementExecutor(parent) {
       val loop = new Breaks
       // Execute the children of this LOOP node.
       loop.breakable {
-        for (child: ICodeNode <- loopChildren) {
+        for (child: ICodeNode <- loopChildren.asScala) {
           val childType = child.getType.asInstanceOf[ICodeNodeTypeImpl]
 
           // TEST node?
