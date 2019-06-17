@@ -35,4 +35,8 @@ trait SymTab {
     * @return A sorted by name list of entries.
     */
   def sortedEntries: util.ArrayList[SymTabEntry]
+
+  def nextSlotNumber(): Int
+
+  def getMaxSlotNumber(): Int
 }

@@ -4,7 +4,7 @@ import java.util
 
 import frontend.pascal.{PascalErrorCode, PascalParserTD, PascalTokenType}
 import frontend.{Parser, Token}
-import intermediate.symtabimpl.DefinitionImpl
+import intermediate.symtabimpl.{DefinitionImpl, SymTabKeyImpl}
 import intermediate.{Definition, SymTabEntry, TypeSpec}
 
 import scala.collection.JavaConverters._
@@ -65,6 +65,10 @@ class VariableDeclarationsParser(parent: PascalParserTD) extends PascalParserTD(
         id = Parser.symTabStack.enterLocal(name)
         id.setDefinition(definition)
         id.appendLineNumber(token.getLineNumber)
+
+        // Set its slot number in the local variables array.
+        val slot = id.getSymTab.nextSlotNumber()
+        id.setAttribute(SymTabKeyImpl.SLOT, slot)
       } else {
         PascalParserTD.errorHandler.flag(token, PascalErrorCode.IDENTIFIER_REDEFINED, this)
       }

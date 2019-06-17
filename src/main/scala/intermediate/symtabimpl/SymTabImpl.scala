@@ -4,7 +4,11 @@ import java.util
 
 import intermediate.{SymTab, SymTabEntry, SymTabFactory}
 
-class SymTabImpl(val nestingLevel: Int) extends util.TreeMap[String, SymTabEntry] with SymTab {
+class SymTabImpl(nl: Int) extends util.TreeMap[String, SymTabEntry] with SymTab {
+
+  var nestingLevel = nl
+  var slotNumber = -1
+  var maxSlotNumber = 0
 
   /**
     * Getter.
@@ -47,4 +51,12 @@ class SymTabImpl(val nestingLevel: Int) extends util.TreeMap[String, SymTabEntry
     })
     result
   }
+
+  override def nextSlotNumber(): Int = {
+    slotNumber += 1
+    maxSlotNumber = slotNumber
+    return slotNumber
+  }
+
+  override def getMaxSlotNumber(): Int = maxSlotNumber
 }

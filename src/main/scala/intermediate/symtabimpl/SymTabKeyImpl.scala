@@ -25,4 +25,8 @@ object SymTabKeyImpl {
 
   // Variable or record field value.
   val DATA_VALUE = new SymTabKeyImpl
+
+  // Local variables array slot numbers
+  val SLOT = new SymTabKeyImpl
+  val WRAP_SLOT = new SymTabKeyImpl
 }
